@@ -63,17 +63,12 @@ void loop() {
       readingState = 2;
       finishTime = millis();
       readingDuration = finishTime - startTime;
-      unsigned long durationMs = readingDuration;  // readingDuration为毫秒数
-      unsigned int minutes = durationMs / 60000;     // 每分钟60000毫秒
-      unsigned int seconds = (durationMs % 60000) / 1000;  // 余下的秒数
-
+      unsigned long durations = readingDuration/1000;  // readingDuration为毫秒数
       Serial.print("Reading duration: ");
-      Serial.print(minutes);
-      Serial.print(" minutes, ");
-      Serial.print(seconds);
+      Serial.print(durations);
       Serial.println(" seconds.");
     }
-  } 
+  }
   else if (readingState == 2) {
     // 阅读结束状态：LED稳定显示绿色（可改为蓝色）
     setSteadyColor(0, 255, 0);
