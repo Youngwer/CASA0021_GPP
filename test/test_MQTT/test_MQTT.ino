@@ -141,7 +141,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println(message);
 
   // 如果消息来自设备 B 的主题，则解析并打印时间信息
-  if (strcmp(topic, mqtt_topic_B) == 0) {
+  if (strcmp(topic, mqtt_topic_A) == 0) {
     // 假设设备 B 发布的消息格式为 {"time": "XX"}
     // 这里可以使用更复杂的 JSON 解析库（如 ArduinoJson）来解析消息
     // 这里我们简单地提取时间信息
@@ -151,7 +151,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       char* time_end = strchr(time_start, '\"');
       if (time_end != NULL) {
         *time_end = '\0';  // 结束字符串
-        Serial.print("Time of Device B is: ");
+        Serial.print("Time of Device A is: ");
         Serial.println(time_start);
       }
     }

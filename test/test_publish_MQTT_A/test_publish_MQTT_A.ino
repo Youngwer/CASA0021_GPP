@@ -90,7 +90,7 @@ void loop() {
       // 发布阅读时长到 MQTT
       char time_message[50];
       sprintf(time_message, "{\"time\": \"%lu seconds\"}", durations);
-      if (client.publish(mqtt_topic_A, time_message)) {
+      if (client.publish(mqtt_topic_A, time_message, true)) {
         Serial.println("Reading duration published to MQTT!");
       } else {
         Serial.println("Failed to publish reading duration.");
