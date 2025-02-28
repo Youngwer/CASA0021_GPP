@@ -10,35 +10,63 @@ void setup() {
     Serial.begin(115200);
     servo1.attach(servoPin1);  // 绑定舵机1
     servo2.attach(servoPin2);  // 绑定舵机2
+    initializeServos(); // 初始化舵机位置
+}
+
+void loop() {
+    openBook(); // 打开书
+    delay(1000); // 等待1秒
+    closeBook(); // 关闭书
+    delay(1000); // 等待1秒
+}
+
+// 初始化舵机位置
+void initializeServos() {
     servo1.write(0);
     servo2.write(180);
     delay(1000);
 }
 
-void loop() {
-    for (int angle = 0; angle <= 180; angle += 10) {
-        int reversedAngle = 180 - angle;  // 反向旋转
+// 打开书
+void openBook() {
+    Serial.println("Opening the book...");
+    moveServos(0, 180, 10, 500); // 从0°到180°，每次增加10°，延时500ms
+    Serial.println("Book is open!");
+}
 
-        Serial.print("Servo1 angle: ");
-        Serial.print(angle);
-        Serial.print(" | Servo2 angle: ");
-        Serial.println(reversedAngle);
+// 关闭书
+void closeBook() {
+    Serial.println("Closing the book...");
+    moveServos(180, 0, -10, 500); // 从180°到0°，每次减少10°，延时500ms
+    Serial.println("Book is closed!");
+}
 
-        servo1.write(angle);
-        servo2.write(reversedAngle);
-        delay(500);
+// 控制舵机运动
+void moveServos(int startAngle, int endAngle, int step, int delayTime) {
+    if (step > 0) {
+        // 正向旋转
+        for (int angle = startAngle; angle <= endAngle; angle += step) {
+            int reversedAngle = 180 - angle;  // 反向旋转
+            setServoAngles(angle, reversedAngle);
+            delay(delayTime);
+        }
+    } else {
+        // 反向旋转
+        for (int angle = startAngle; angle >= endAngle; angle += step) {
+            int reversedAngle = 180 - angle;  // 反向旋转
+            setServoAngles(angle, reversedAngle);
+            delay(delayTime);
+        }
     }
+}
 
-    for (int angle = 180; angle >= 0; angle -= 10) {
-        int reversedAngle = 180 - angle;  // 反向旋转
+// 设置舵机角度
+void setServoAngles(int angle1, int angle2) {
+    Serial.print("Servo1 angle: ");
+    Serial.print(angle1);
+    Serial.print(" | Servo2 angle: ");
+    Serial.println(angle2);
 
-        Serial.print("Servo1 angle: ");
-        Serial.print(angle);
-        Serial.print(" | Servo2 angle: ");
-        Serial.println(reversedAngle);
-
-        servo1.write(angle);
-        servo2.write(reversedAngle);
-        delay(500);
-    }
+    servo1.write(angle1);
+    servo2.write(angle2);
 }
