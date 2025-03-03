@@ -1,138 +1,312 @@
-#include <Adafruit_NeoPixel.h>
+#include <ESP32Servo.h>         // ESP32Servo 库
+#include <Adafruit_NeoPixel.h>  // NeoPixel 库
+#include <WiFi.h>              // WiFi 库
+#include <PubSubClient.h>      // MQTT 库
 
-// ================================
-// 定义引脚及LED配置
-// ================================
-#define LED_PIN    23    // LED数据线连接到 ESP32 的 23 号引脚
-#define NUM_LEDS   8     // LEDstick 上LED数量，根据实际情况修改
+Servo servo1;  // 创建舵机对象1
+Servo servo2;  // 创建舵机对象2
 
-// 定义按钮连接的引脚（接按钮的一端，另一端接GND）
-// 使用内部上拉电阻
-#define BUTTON_PIN 13
+// 引脚定义
+const int servoPin1 = 15;  // 舵机1连接的GPIO
+const int servoPin2 = 2;   // 舵机2连接的GPIO
+const int buttonPin = 13;  // 按钮连接的GPIO
+#define LED_PIN    23      // LED数据线引脚
+#define NUM_LEDS   8       // LED数量
 
-// 创建 NeoPixel 对象，采用 GRB 顺序及 800KHz 协议
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-// ================================
+// MQTT 配置
+const char* ssid          = "CE-Hub-Student";
+const char* password      = "casa-ce-gagarin-public-service";
+const char* mqtt_username = "student";
+const char* mqtt_password = "ce2021-mqtt-forget-whale";
+const char* mqtt_server   = "mqtt.cetools.org";
+const int   mqtt_port     = 1884;
+const char* mqtt_topic_isReading_A  = "student/ucfnwy2/DeviceA/isReading";
+const char* mqtt_topic_totalDailyTime_A = "student/ucfnwy2/DeviceA/totalDailyTime";
+const char* mqtt_topic_isReading_B = "student/ucfnwy2/DeviceB/isReading";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
 // 状态变量
-// ================================
-/*
-   readingState 状态定义：
-   0 - 初始状态（未开始阅读），LED 稳定显示红色
-   1 - 阅读模式中，LED 呼吸闪烁
-   2 - 阅读结束，LED 稳定显示绿色（或蓝色）
-*/
-int readingState = 0;
+bool isOpen = false;            // 书的状态
+int lastButtonState = HIGH;     // 上一次按钮状态
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;
+
+// 阅读时间变量
 unsigned long startTime = 0;
-unsigned long finishTime = 0;
-unsigned long readingDuration = 0;
+unsigned long dailyReadingTime = 0;
+unsigned long lastResetTime = 0;
+
+// 实时更新相关变量
+unsigned long lastUpdateTime = 0;
+const unsigned long updateInterval = 10000;  // 更新间隔（10秒）
+
+// 设备B的阅读状态
+bool deviceBIsReading = false;  // 设备B是否在阅读
+
+// 呼吸灯相关变量
+int brightness = 0;             // 当前亮度（0-255）
+bool increasing = true;         // 亮度是否在增加
+unsigned long lastBreathTime = 0;  // 上次呼吸灯更新时间
+const unsigned long breathInterval = 20;  // 呼吸灯每次更新的间隔（毫秒）
 
 void setup() {
-  Serial.begin(115200);
-  // 设置按钮引脚为输入，上拉模式
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  
-  // 初始化 LED 灯带
-  strip.begin();
-  strip.show(); // 先关闭所有LED
+    Serial.begin(115200);
+    pinMode(buttonPin, INPUT_PULLUP);
+    servo1.attach(servoPin1);
+    servo2.attach(servoPin2);
+    
+    strip.begin();
+    strip.show();
+    strip.setBrightness(50);
+    
+    lastResetTime = millis();
+    
+    connectToWiFi();
+    client.setServer(mqtt_server, mqtt_port);
+    client.setCallback(callback);
+    Serial.println("Setup complete");
 }
 
 void loop() {
-  // 状态机处理不同阶段
-  if (readingState == 0) {
-    // 初始状态：LED稳定显示红色
-    setSteadyColor(255, 0, 0);
+    if (!client.connected()) {
+        reconnectMQTT();
+    }
+    client.loop();
     
-    // 检查是否按下按钮
-    if (digitalRead(BUTTON_PIN) == LOW) {
-      delay(50);  // 简单去抖
-      if (digitalRead(BUTTON_PIN) == LOW) {
-        // 等待按钮释放
-        while(digitalRead(BUTTON_PIN) == LOW) { delay(10); }
-        // 进入阅读模式
-        readingState = 1;
-        startTime = millis();
-        Serial.println("Reading mode started");
-      }
+    checkDailyReset();
+    updateReadingTime();
+
+    // 检测按钮状态
+    int buttonState = digitalRead(buttonPin);
+    if (buttonState != lastButtonState) {
+        lastDebounceTime = millis();
     }
-  } 
-  else if (readingState == 1) {
-    // 阅读模式：显示呼吸效果
-    // 当呼吸效果过程中检测到按钮按下，则结束阅读
-    if (breathingEffectWithInterrupt(255, 0, 0)) {
-      readingState = 2;
-      finishTime = millis();
-      readingDuration = finishTime - startTime;
-      unsigned long durations = readingDuration/1000;  // readingDuration为毫秒数
-      Serial.print("Reading duration: ");
-      Serial.print(durations);
-      Serial.println(" seconds.");
+
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+        if (buttonState == LOW) {
+            if (isOpen) {
+                closeBook();
+                setLEDColor(0, 0, 0);
+                stopReadingTimer();
+            } else {
+                openBook();
+                startReadingTimer();
+            }
+            isOpen = !isOpen;
+        }
     }
-  }
-  else if (readingState == 2) {
-    // 阅读结束状态：LED稳定显示绿色（可改为蓝色）
-    setSteadyColor(0, 255, 0);
-    // 这里保持该状态，串口也只输出一次阅读时长
-    delay(1000);  // 防止串口信息刷屏
-  }
+
+    // 根据设备A和B的阅读状态更新LED效果
+    if (isOpen) {
+        if (deviceBIsReading) {
+            // 如果设备B也在阅读，显示非阻塞呼吸灯效果
+            updateBreathingEffect(255, 0, 0);  // 红色
+        } else {
+            // 如果设备B不在阅读，保持红色常亮
+            setLEDColor(255, 0, 0);
+        }
+    }
+
+    lastButtonState = buttonState;
 }
 
-/*
-  breathingEffectWithInterrupt：实现呼吸效果并允许在过程中检测按钮中断。
-  如果在效果过程中检测到按钮按下，则返回 true，退出呼吸效果。
-  参数 red/green/blue 为目标颜色分量（0~255）。
-*/
-bool breathingEffectWithInterrupt(uint8_t red, uint8_t green, uint8_t blue) {
-  // 亮度上升阶段
-  for (int brightness = 0; brightness < 256; brightness += 5) {
-    setStripColorWithBrightness(red, green, blue, brightness);
-    delay(20);
-    if (digitalRead(BUTTON_PIN) == LOW) {
-      delay(50);  // 去抖
-      if (digitalRead(BUTTON_PIN) == LOW) {
-        // 等待按钮释放
-        while(digitalRead(BUTTON_PIN) == LOW) { delay(10); }
-        return true;
-      }
+// MQTT回调函数，处理订阅的消息
+void callback(char* topic, byte* payload, unsigned int length) {
+    String message;
+    for (unsigned int i = 0; i < length; i++) {
+        message += (char)payload[i];
     }
-  }
-  // 亮度下降阶段
-  for (int brightness = 255; brightness >= 0; brightness -= 5) {
-    setStripColorWithBrightness(red, green, blue, brightness);
-    delay(20);
-    if (digitalRead(BUTTON_PIN) == LOW) {
-      delay(50);  // 去抖
-      if (digitalRead(BUTTON_PIN) == LOW) {
-        while(digitalRead(BUTTON_PIN) == LOW) { delay(10); }
-        return true;
-      }
+
+    if (String(topic) == mqtt_topic_isReading_B) {
+        deviceBIsReading = (message == "true");
+        Serial.print("Device B isReading: ");
+        Serial.println(deviceBIsReading ? "true" : "false");
     }
-  }
-  return false;
 }
 
-/*
-  setStripColorWithBrightness：根据给定颜色和亮度设置所有 LED。
-  brightness 范围 0～255。
-*/
+// WiFi和MQTT连接函数
+void connectToWiFi() {
+    Serial.print("Connecting to WiFi: ");
+    Serial.println(ssid);
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\nWiFi connected.");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+}
+
+void reconnectMQTT() {
+    if (WiFi.status() != WL_CONNECTED) {
+        connectToWiFi();
+    }
+    while (!client.connected()) {
+        Serial.print("Attempting MQTT connection...");
+        String clientId = "DeviceA_ESP32_";
+        clientId += String(random(0xffff), HEX);
+        if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
+            Serial.println("Connected to MQTT broker");
+            client.subscribe(mqtt_topic_isReading_B);
+        } else {
+            Serial.print("Failed, rc=");
+            Serial.print(client.state());
+            Serial.println(" - trying again in 5 seconds");
+            delay(5000);
+        }
+    }
+}
+
+// 实时更新阅读时间到MQTT
+void updateReadingTime() {
+    if (isOpen && startTime > 0) {
+        unsigned long currentTime = millis();
+        if (currentTime - lastUpdateTime >= updateInterval) {
+            unsigned long currentSessionTime = currentTime - startTime;
+            unsigned long totalTime = dailyReadingTime + currentSessionTime;
+            
+            char timeStr[20];
+            sprintf(timeStr, "%lu", totalTime / 1000);
+            client.publish(mqtt_topic_totalDailyTime_A, timeStr, true);
+            Serial.print("Updated total reading time to MQTT: ");
+            printTime(totalTime);
+            
+            lastUpdateTime = currentTime;
+        }
+    }
+}
+
+// 阅读时间相关函数
+void checkDailyReset() {
+    unsigned long currentTime = millis();
+    if (currentTime - lastResetTime >= 86400000) {
+        Serial.print("New day started! Previous day's reading time: ");
+        printTime(dailyReadingTime);
+        
+        client.publish(mqtt_topic_isReading_A, "false", true);
+        client.publish(mqtt_topic_totalDailyTime_A, "0", true);
+        
+        dailyReadingTime = 0;
+        lastResetTime = currentTime;
+    }
+}
+
+void startReadingTimer() {
+    startTime = millis();
+    lastUpdateTime = startTime;
+    Serial.println("Reading session started!");
+    
+    char timeStr[20];
+    sprintf(timeStr, "%lu", dailyReadingTime / 1000);
+    client.publish(mqtt_topic_isReading_A, "true", true);
+    client.publish(mqtt_topic_totalDailyTime_A, timeStr, true);
+    Serial.println("Reading status published to MQTT!");
+}
+
+void stopReadingTimer() {
+    if (startTime > 0) {
+        unsigned long sessionTime = millis() - startTime;
+        dailyReadingTime += sessionTime;
+        Serial.print("Reading session ended. Session time: ");
+        printTime(sessionTime);
+        Serial.print("Total daily reading time: ");
+        printTime(dailyReadingTime);
+        
+        char timeStr[20];
+        sprintf(timeStr, "%lu", dailyReadingTime / 1000);
+        client.publish(mqtt_topic_isReading_A, "false", true);
+        client.publish(mqtt_topic_totalDailyTime_A, timeStr, true);
+        Serial.println("Reading duration published to MQTT!");
+        startTime = 0;
+    }
+}
+
+// 舵机控制函数
+void openBook() {
+    Serial.println("Opening the book...");
+    moveServos(0, 180, 10, 200);
+    Serial.println("Book is open!");
+}
+
+void closeBook() {
+    Serial.println("Closing the book...");
+    moveServos(180, 0, -10, 200);
+    Serial.println("Book is closed!");
+}
+
+void moveServos(int startAngle, int endAngle, int step, int delayTime) {
+    if (step > 0) {
+        for (int angle = startAngle; angle <= endAngle; angle += step) {
+            int reversedAngle = 180 - angle;
+            setServoAngles(angle, reversedAngle);
+            delay(delayTime);
+        }
+    } else {
+        for (int angle = startAngle; angle >= endAngle; angle += step) {
+            int reversedAngle = 180 - angle;
+            setServoAngles(angle, reversedAngle);
+            delay(delayTime);
+        }
+    }
+}
+
+void setServoAngles(int angle1, int angle2) {
+    servo1.write(angle1);
+    servo2.write(angle2);
+}
+
+// LED控制函数
+void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+        strip.setPixelColor(i, strip.Color(r, g, b));
+    }
+    strip.show();
+}
+
+// 非阻塞呼吸灯效果
+void updateBreathingEffect(uint8_t red, uint8_t green, uint8_t blue) {
+    unsigned long currentTime = millis();
+    if (currentTime - lastBreathTime >= breathInterval) {
+        if (increasing) {
+            brightness += 5;
+            if (brightness >= 255) {
+                brightness = 255;
+                increasing = false;
+            }
+        } else {
+            brightness -= 5;
+            if (brightness <= 0) {
+                brightness = 0;
+                increasing = true;
+            }
+        }
+        setStripColorWithBrightness(red, green, blue, brightness);
+        lastBreathTime = currentTime;
+    }
+}
+
 void setStripColorWithBrightness(uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
-  // 根据亮度调整颜色分量
-  uint8_t r = (red * brightness) / 255;
-  uint8_t g = (green * brightness) / 255;
-  uint8_t b = (blue * brightness) / 255;
-  
-  for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, strip.Color(r, g, b));
-  }
-  strip.show();
+    uint8_t r = (red * brightness) / 255;
+    uint8_t g = (green * brightness) / 255;
+    uint8_t b = (blue * brightness) / 255;
+    for (int i = 0; i < strip.numPixels(); i++) {
+        strip.setPixelColor(i, strip.Color(r, g, b));
+    }
+    strip.show();
 }
 
-/*
-  setSteadyColor：将LED设置为稳定不闪烁的颜色。
-*/
-void setSteadyColor(uint8_t red, uint8_t green, uint8_t blue) {
-  for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, strip.Color(red, green, blue));
-  }
-  strip.show();
+// 时间格式化函数
+void printTime(unsigned long milliseconds) {
+    unsigned long seconds = milliseconds / 1000;
+    unsigned long minutes = seconds / 60;
+    seconds = seconds % 60;
+    Serial.print(minutes);
+    Serial.print(" minutes ");
+    Serial.print(seconds);
+    Serial.println(" seconds");
 }
