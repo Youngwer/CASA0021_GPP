@@ -3,17 +3,21 @@
 #include <WiFi.h>              // WiFi 库
 #include <PubSubClient.h>      // MQTT 库
 
-Servo servo1;  // 创建舵机对象1
 Servo servo2;  // 创建舵机对象2
 
 // 引脚定义
-const int servoPin1 = 15;  // 舵机1连接的GPIO
 const int servoPin2 = 2;   // 舵机2连接的GPIO
 const int buttonPin = 13;  // 按钮连接的GPIO
-#define LED_PIN    23      // LED数据线引脚
-#define NUM_LEDS   8       // LED数量
+#define LED_PIN    23      // 原LED数据线引脚（状态指示灯）
+#define NUM_LEDS   8       // 原LED数量
+#define TIME_LED_PIN  25   // 设备A时间指示灯引脚
+#define NUM_TIME_LEDS 16   // 设备A时间指示灯LED数量
+#define DEVICEB_TIME_LED_PIN 26  // 设备B时间指示灯引脚 (D26)
+#define NUM_DEVICEB_TIME_LEDS 16  // 设备B时间指示灯LED数量
 
 Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel timeStrip(NUM_TIME_LEDS, TIME_LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel deviceBTimeStrip(NUM_DEVICEB_TIME_LEDS, DEVICEB_TIME_LED_PIN, NEO_GRB + NEO_KHZ800);
 
 // MQTT 配置
 const char* ssid          = "CE-Hub-Student";
@@ -25,6 +29,7 @@ const int   mqtt_port     = 1884;
 const char* mqtt_topic_isReading_A  = "student/ucfnwy2/DeviceA/isReading";
 const char* mqtt_topic_totalDailyTime_A = "student/ucfnwy2/DeviceA/totalDailyTime";
 const char* mqtt_topic_isReading_B = "student/ucfnwy2/DeviceB/isReading";
+const char* mqtt_topic_totalDailyTime_B = "student/ucfnwy2/DeviceB/totalDailyTime";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -44,8 +49,9 @@ unsigned long lastResetTime = 0;
 unsigned long lastUpdateTime = 0;
 const unsigned long updateInterval = 10000;  // 更新间隔（10秒）
 
-// 设备B的阅读状态
+// 设备B的阅读状态和时间
 bool deviceBIsReading = false;  // 设备B是否在阅读
+unsigned long deviceBTotalDailyTime = 0;  // 设备B的每日总阅读时间（秒）
 
 // 呼吸灯相关变量
 int brightness = 0;             // 当前亮度（0-255）
@@ -53,15 +59,40 @@ bool increasing = true;         // 亮度是否在增加
 unsigned long lastBreathTime = 0;  // 上次呼吸灯更新时间
 const unsigned long breathInterval = 20;  // 呼吸灯每次更新的间隔（毫秒）
 
+// 设备A时间指示灯特效相关变量
+int lastLedsLitA = 0;           // 设备A上次点亮的LED数量
+bool inEffectA = false;         // 设备A是否正在执行特效
+int effectStepA = 0;            // 设备A特效当前步骤
+int targetLedsA = 0;            // 设备A特效目标LED数量
+unsigned long lastEffectTimeA = 0;  // 设备A上次特效更新的时间
+
+// 设备B时间指示灯特效相关变量
+int lastLedsLitB = 0;           // 设备B上次点亮的LED数量
+bool inEffectB = false;         // 设备B是否正在执行特效
+int effectStepB = 0;            // 设备B特效当前步骤
+int targetLedsB = 0;            // 设备B特效目标LED数量
+unsigned long lastEffectTimeB = 0;  // 设备B上次特效更新的时间
+
+const unsigned long flowInterval = 50;  // 流动灯每步间隔（毫秒）
+const unsigned long flashInterval = 200;  // 闪烁间隔（毫秒）
+
 void setup() {
     Serial.begin(115200);
     pinMode(buttonPin, INPUT_PULLUP);
-    servo1.attach(servoPin1);
+
     servo2.attach(servoPin2);
     
     strip.begin();
     strip.show();
     strip.setBrightness(50);
+
+    timeStrip.begin();
+    timeStrip.show();
+    timeStrip.setBrightness(50);
+
+    deviceBTimeStrip.begin();
+    deviceBTimeStrip.show();
+    deviceBTimeStrip.setBrightness(50);
     
     lastResetTime = millis();
     
@@ -79,6 +110,8 @@ void loop() {
     
     checkDailyReset();
     updateReadingTime();
+    updateTimeLEDs();       // 更新设备A时间指示灯
+    updateDeviceBTimeLEDs();  // 更新设备B时间指示灯
 
     // 检测按钮状态
     int buttonState = digitalRead(buttonPin);
@@ -103,10 +136,8 @@ void loop() {
     // 根据设备A和B的阅读状态更新LED效果
     if (isOpen) {
         if (deviceBIsReading) {
-            // 如果设备B也在阅读，显示非阻塞呼吸灯效果
             updateBreathingEffect(255, 0, 0);  // 红色
         } else {
-            // 如果设备B不在阅读，保持红色常亮
             setLEDColor(255, 0, 0);
         }
     }
@@ -125,6 +156,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
         deviceBIsReading = (message == "true");
         Serial.print("Device B isReading: ");
         Serial.println(deviceBIsReading ? "true" : "false");
+    } else if (String(topic) == mqtt_topic_totalDailyTime_B) {
+        deviceBTotalDailyTime = message.toInt();
+        Serial.print("Device B totalDailyTime: ");
+        Serial.print(deviceBTotalDailyTime);
+        Serial.println(" seconds");
     }
 }
 
@@ -153,6 +189,7 @@ void reconnectMQTT() {
         if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
             Serial.println("Connected to MQTT broker");
             client.subscribe(mqtt_topic_isReading_B);
+            client.subscribe(mqtt_topic_totalDailyTime_B);
         } else {
             Serial.print("Failed, rc=");
             Serial.print(client.state());
@@ -179,6 +216,204 @@ void updateReadingTime() {
             lastUpdateTime = currentTime;
         }
     }
+}
+
+// 更新设备A时间指示灯
+void updateTimeLEDs() {
+    if (inEffectA) {
+        updateEffectA();
+        return;
+    }
+
+    unsigned long totalTime = dailyReadingTime;
+    if (isOpen && startTime > 0) {
+        totalTime += (millis() - startTime);
+    }
+    unsigned long totalSeconds = totalTime / 1000;
+
+    // 如果总时间为0，所有灯亮红色
+    if (totalTime == 0) {
+        for (int i = 0; i < NUM_TIME_LEDS; i++) {
+            timeStrip.setPixelColor(i, timeStrip.Color(255, 0, 0));  // 红色
+        }
+        timeStrip.show();
+        lastLedsLitA = 0;  // 重置点亮数量
+        return;
+    }
+
+    // 正常亮灯逻辑
+    int ledsToLight = 0;
+    if (totalSeconds < 15) {
+        ledsToLight = 2;
+    } else if (totalSeconds < 30) {
+        ledsToLight = 4;
+    } else if (totalSeconds < 45) {
+        ledsToLight = 8;
+    } else if (totalSeconds < 60) {
+        ledsToLight = 12;
+    } else {
+        ledsToLight = 16;
+    }
+
+    if (ledsToLight > lastLedsLitA) {
+        inEffectA = true;
+        effectStepA = 0;
+        targetLedsA = ledsToLight;
+        lastEffectTimeA = millis();
+        updateEffectA();
+    } else {
+        for (int i = 0; i < NUM_TIME_LEDS; i++) {
+            if (i < ledsToLight) {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 255, 0));
+            } else {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 0, 0));
+            }
+        }
+        timeStrip.show();
+    }
+
+    lastLedsLitA = ledsToLight;
+}
+
+// 更新设备B时间指示灯
+void updateDeviceBTimeLEDs() {
+    if (inEffectB) {
+        updateEffectB();
+        return;
+    }
+
+    unsigned long totalSeconds = deviceBTotalDailyTime;
+
+    // 如果总时间为0，所有灯亮红色
+    if (totalSeconds == 0) {
+        for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
+            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(255, 0, 0));  // 红色
+        }
+        deviceBTimeStrip.show();
+        lastLedsLitB = 0;  // 重置点亮数量
+        return;
+    }
+
+    // 正常亮灯逻辑
+    int ledsToLight = 0;
+    if (totalSeconds < 15) {
+        ledsToLight = 2;
+    } else if (totalSeconds < 30) {
+        ledsToLight = 4;
+    } else if (totalSeconds < 45) {
+        ledsToLight = 8;
+    } else if (totalSeconds < 60) {
+        ledsToLight = 12;
+    } else {
+        ledsToLight = 16;
+    }
+
+    if (ledsToLight > lastLedsLitB) {
+        inEffectB = true;
+        effectStepB = 0;
+        targetLedsB = ledsToLight;
+        lastEffectTimeB = millis();
+        updateEffectB();
+    } else {
+        for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
+            if (i < ledsToLight) {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 255, 0));
+            } else {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 0, 0));
+            }
+        }
+        deviceBTimeStrip.show();
+    }
+
+    lastLedsLitB = ledsToLight;
+}
+
+// 更新设备A的灯光特效
+void updateEffectA() {
+    unsigned long currentTime = millis();
+    if (currentTime - lastEffectTimeA < (effectStepA < targetLedsA ? flowInterval : flashInterval)) {
+        return;
+    }
+
+    if (effectStepA < targetLedsA) {
+        for (int i = 0; i < NUM_TIME_LEDS; i++) {
+            if (i <= effectStepA) {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 255, 0));
+            } else {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 0, 0));
+            }
+        }
+        timeStrip.show();
+        effectStepA++;
+    } else if (effectStepA < targetLedsA + 4) {
+        bool isOn = (effectStepA % 2 == 0);
+        for (int i = 0; i < NUM_TIME_LEDS; i++) {
+            if (i < targetLedsA) {
+                timeStrip.setPixelColor(i, isOn ? timeStrip.Color(0, 255, 0) : timeStrip.Color(0, 0, 0));
+            } else {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 0, 0));
+            }
+        }
+        timeStrip.show();
+        effectStepA++;
+    } else {
+        inEffectA = false;
+        effectStepA = 0;
+        for (int i = 0; i < NUM_TIME_LEDS; i++) {
+            if (i < targetLedsA) {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 255, 0));
+            } else {
+                timeStrip.setPixelColor(i, timeStrip.Color(0, 0, 0));
+            }
+        }
+        timeStrip.show();
+    }
+
+    lastEffectTimeA = currentTime;
+}
+
+// 更新设备B的灯光特效
+void updateEffectB() {
+    unsigned long currentTime = millis();
+    if (currentTime - lastEffectTimeB < (effectStepB < targetLedsB ? flowInterval : flashInterval)) {
+        return;
+    }
+
+    if (effectStepB < targetLedsB) {
+        for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
+            if (i <= effectStepB) {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 255, 0));
+            } else {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 0, 0));
+            }
+        }
+        deviceBTimeStrip.show();
+        effectStepB++;
+    } else if (effectStepB < targetLedsB + 4) {
+        bool isOn = (effectStepB % 2 == 0);
+        for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
+            if (i < targetLedsB) {
+                deviceBTimeStrip.setPixelColor(i, isOn ? deviceBTimeStrip.Color(0, 255, 0) : deviceBTimeStrip.Color(0, 0, 0));
+            } else {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 0, 0));
+            }
+        }
+        deviceBTimeStrip.show();
+        effectStepB++;
+    } else {
+        inEffectB = false;
+        effectStepB = 0;
+        for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
+            if (i < targetLedsB) {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 255, 0));
+            } else {
+                deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 0, 0));
+            }
+        }
+        deviceBTimeStrip.show();
+    }
+
+    lastEffectTimeB = currentTime;
 }
 
 // 阅读时间相关函数
@@ -256,7 +491,6 @@ void moveServos(int startAngle, int endAngle, int step, int delayTime) {
 }
 
 void setServoAngles(int angle1, int angle2) {
-    servo1.write(angle1);
     servo2.write(angle2);
 }
 
