@@ -2,6 +2,7 @@
 #include <Adafruit_NeoPixel.h>  // NeoPixel 库
 #include <WiFi.h>              // WiFi 库
 #include <PubSubClient.h>      // MQTT 库
+#include "arduino_secrets.h" 
 
 Servo servo2;  // 创建舵机对象2
 
@@ -20,12 +21,13 @@ Adafruit_NeoPixel timeStrip(NUM_TIME_LEDS, TIME_LED_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel deviceBTimeStrip(NUM_DEVICEB_TIME_LEDS, DEVICEB_TIME_LED_PIN, NEO_GRB + NEO_KHZ800);
 
 // MQTT 配置
-const char* ssid          = "CE-Hub-Student";
-const char* password      = "casa-ce-gagarin-public-service";
-const char* mqtt_username = "student";
-const char* mqtt_password = "ce2021-mqtt-forget-whale";
+const char* ssid          = SECRET_SSID;
+const char* password      = SECRET_PASS;
+const char* mqtt_username = SECRET_MQTTUSER;
+const char* mqtt_password = SECRET_MQTTPASS;
 const char* mqtt_server   = "mqtt.cetools.org";
 const int   mqtt_port     = 1884;
+
 const char* mqtt_topic_isReading_A  = "student/ucfnwy2/DeviceA/isReading";
 const char* mqtt_topic_totalDailyTime_A = "student/ucfnwy2/DeviceA/totalDailyTime";
 const char* mqtt_topic_isReading_B = "student/ucfnwy2/DeviceB/isReading";
