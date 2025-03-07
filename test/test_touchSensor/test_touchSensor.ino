@@ -4,8 +4,8 @@
 // 引脚定义
 const int servoPin = 2;         // 舵机引脚
 const int touchPin = 13;        // TTP223 触摸传感器信号引脚
-#define LED_PIN    23           // LED 灯条引脚 (D26)
-#define NUM_LEDS   8            // LED 数量
+#define LED_PIN    26           // LED 灯条引脚 (D26)
+#define NUM_LEDS   12            // LED 数量
 
 // 舵机和 LED 灯条对象
 Servo servo;
