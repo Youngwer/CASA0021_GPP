@@ -2,12 +2,13 @@
 #include <Adafruit_NeoPixel.h>  // NeoPixel 库
 #include <WiFi.h>              // WiFi 库
 #include <PubSubClient.h>      // MQTT 库
+#include "arduino_secrets.h" 
 
 Servo servo2;  // 创建舵机对象2
 
 // 引脚定义
 const int servoPin2 = 2;   // 舵机2连接的GPIO
-const int TOUCH_PIN = 13;  // TTP223B SIG 引脚，替换原按钮引脚
+const int buttonPin = 13;  // 按钮连接的GPIO
 #define LED_PIN    23      // 原LED数据线引脚（状态指示灯）
 #define NUM_LEDS   8       // 原LED数量
 #define TIME_LED_PIN  25   // 设备A时间指示灯引脚
@@ -20,12 +21,13 @@ Adafruit_NeoPixel timeStrip(NUM_TIME_LEDS, TIME_LED_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel deviceBTimeStrip(NUM_DEVICEB_TIME_LEDS, DEVICEB_TIME_LED_PIN, NEO_GRB + NEO_KHZ800);
 
 // MQTT 配置
-const char* ssid          = "CE-Hub-Student";
-const char* password      = "casa-ce-gagarin-public-service";
-const char* mqtt_username = "student";
-const char* mqtt_password = "ce2021-mqtt-forget-whale";
+const char* ssid          = SECRET_SSID;
+const char* password      = SECRET_PASS;
+const char* mqtt_username = SECRET_MQTTUSER;
+const char* mqtt_password = SECRET_MQTTPASS;
 const char* mqtt_server   = "mqtt.cetools.org";
 const int   mqtt_port     = 1884;
+
 const char* mqtt_topic_isReading_A  = "student/ucfnwy2/DeviceA/isReading";
 const char* mqtt_topic_totalDailyTime_A = "student/ucfnwy2/DeviceA/totalDailyTime";
 const char* mqtt_topic_isReading_B = "student/ucfnwy2/DeviceB/isReading";
@@ -36,11 +38,9 @@ PubSubClient client(espClient);
 
 // 状态变量
 bool isOpen = false;            // 书的状态
-int lastTouchState = HIGH;      // 上一次触摸状态
+int lastButtonState = HIGH;     // 上一次按钮状态
 unsigned long lastDebounceTime = 0;
 const unsigned long debounceDelay = 50;
-unsigned long touchStartTime = 0;  // 触摸开始时间
-const unsigned long longPressDuration = 5000;  // 长按5秒
 
 // 阅读时间变量
 unsigned long startTime = 0;
@@ -75,16 +75,12 @@ int effectStepB = 0;            // 设备B特效当前步骤
 int targetLedsB = 0;            // 设备B特效目标LED数量
 unsigned long lastEffectTimeB = 0;  // 设备B上次特效更新的时间
 
-// 进度灯带显示模式
-enum DisplayMode { SHOW_A, SHOW_B, SHOW_BOTH };
-DisplayMode displayMode = SHOW_A;  // 默认只显示设备A
-
 const unsigned long flowInterval = 50;  // 流动灯每步间隔（毫秒）
 const unsigned long flashInterval = 200;  // 闪烁间隔（毫秒）
 
 void setup() {
     Serial.begin(115200);
-    pinMode(TOUCH_PIN, INPUT);  // TTP223B SIG 引脚作为输入
+    pinMode(buttonPin, INPUT_PULLUP);
 
     servo2.attach(servoPin2);
     
@@ -116,42 +112,17 @@ void loop() {
     
     checkDailyReset();
     updateReadingTime();
+    updateTimeLEDs();       // 更新设备A时间指示灯
+    updateDeviceBTimeLEDs();  // 更新设备B时间指示灯
 
-    // 根据显示模式更新进度灯带
-    switch (displayMode) {
-        case SHOW_A:
-            updateTimeLEDs();  // 只显示设备A
-            break;
-        case SHOW_B:
-            updateDeviceBTimeLEDs();  // 只显示设备B
-            break;
-        case SHOW_BOTH:
-            updateTimeLEDs();  // 同时显示设备A和B
-            updateDeviceBTimeLEDs();
-            break;
+    // 检测按钮状态
+    int buttonState = digitalRead(buttonPin);
+    if (buttonState != lastButtonState) {
+        lastDebounceTime = millis();
     }
 
-    // 检测触摸状态
-    int touchState = digitalRead(TOUCH_PIN);
-    unsigned long currentTime = millis();
-
-    if (touchState != lastTouchState) {
-        lastDebounceTime = currentTime;
-    }
-
-    if ((currentTime - lastDebounceTime) > debounceDelay) {
-        if (touchState == HIGH && lastTouchState == LOW) {
-            // 触摸开始
-            touchStartTime = currentTime;
-        } else if (touchState == LOW && lastTouchState == HIGH) {
-            // 触摸结束
-            unsigned long touchDuration = currentTime - touchStartTime;
-            if (touchDuration < longPressDuration) {
-                // 短按：切换显示模式
-                switchDisplayMode();
-            }
-        } else if (touchState == HIGH && (currentTime - touchStartTime) >= longPressDuration) {
-            // 长按5秒：控制书本打开/闭合
+    if ((millis() - lastDebounceTime) > debounceDelay) {
+        if (buttonState == LOW) {
             if (isOpen) {
                 closeBook();
                 setLEDColor(0, 0, 0);
@@ -161,7 +132,6 @@ void loop() {
                 startReadingTimer();
             }
             isOpen = !isOpen;
-            touchStartTime = currentTime;  // 重置计时，避免重复触发
         }
     }
 
@@ -174,7 +144,7 @@ void loop() {
         }
     }
 
-    lastTouchState = touchState;
+    lastButtonState = buttonState;
 }
 
 // MQTT回调函数，处理订阅的消息
@@ -252,12 +222,6 @@ void updateReadingTime() {
 
 // 更新设备A时间指示灯
 void updateTimeLEDs() {
-    if (displayMode != SHOW_A && displayMode != SHOW_BOTH) {
-        timeStrip.clear();
-        timeStrip.show();
-        return;
-    }
-
     if (inEffectA) {
         updateEffectA();
         return;
@@ -272,13 +236,14 @@ void updateTimeLEDs() {
     // 如果总时间为0，所有灯亮红色
     if (totalTime == 0) {
         for (int i = 0; i < NUM_TIME_LEDS; i++) {
-            timeStrip.setPixelColor(i, timeStrip.Color(255, 0, 0));
+            timeStrip.setPixelColor(i, timeStrip.Color(255, 0, 0));  // 红色
         }
         timeStrip.show();
-        lastLedsLitA = 0;
+        lastLedsLitA = 0;  // 重置点亮数量
         return;
     }
 
+    // 正常亮灯逻辑
     int ledsToLight = 0;
     if (totalSeconds < 15) {
         ledsToLight = 2;
@@ -314,12 +279,6 @@ void updateTimeLEDs() {
 
 // 更新设备B时间指示灯
 void updateDeviceBTimeLEDs() {
-    if (displayMode != SHOW_B && displayMode != SHOW_BOTH) {
-        deviceBTimeStrip.clear();
-        deviceBTimeStrip.show();
-        return;
-    }
-
     if (inEffectB) {
         updateEffectB();
         return;
@@ -327,15 +286,17 @@ void updateDeviceBTimeLEDs() {
 
     unsigned long totalSeconds = deviceBTotalDailyTime;
 
+    // 如果总时间为0，所有灯亮红色
     if (totalSeconds == 0) {
         for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
-            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(255, 0, 0));
+            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(255, 0, 0));  // 红色
         }
         deviceBTimeStrip.show();
-        lastLedsLitB = 0;
+        lastLedsLitB = 0;  // 重置点亮数量
         return;
     }
 
+    // 正常亮灯逻辑
     int ledsToLight = 0;
     if (totalSeconds < 15) {
         ledsToLight = 2;
@@ -457,24 +418,6 @@ void updateEffectB() {
     lastEffectTimeB = currentTime;
 }
 
-// 切换显示模式
-void switchDisplayMode() {
-    switch (displayMode) {
-        case SHOW_A:
-            displayMode = SHOW_B;
-            Serial.println("Switch to SHOW_B");
-            break;
-        case SHOW_B:
-            displayMode = SHOW_BOTH;
-            Serial.println("Switch to SHOW_BOTH");
-            break;
-        case SHOW_BOTH:
-            displayMode = SHOW_A;
-            Serial.println("Switch to SHOW_A");
-            break;
-    }
-}
-
 // 阅读时间相关函数
 void checkDailyReset() {
     unsigned long currentTime = millis();
@@ -523,7 +466,7 @@ void stopReadingTimer() {
 // 舵机控制函数
 void openBook() {
     Serial.println("Opening the book...");
-    moveServos(0, 180, 10, 200);
+    moveServos(0, 180, 10, 500);
     Serial.println("Book is open!");
 }
 
