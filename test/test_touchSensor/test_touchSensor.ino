@@ -1,108 +1,116 @@
 #include <ESP32Servo.h>         // ESP32Servo 库
-#include <Adafruit_NeoPixel.h>  // NeoPixel 库
+#include <Adafruit_NeoPixel.h>
 
-// 引脚定义
-const int servoPin = 2;         // 舵机引脚
-const int touchPin = 13;        // TTP223 触摸传感器信号引脚
-#define LED_PIN    26           // LED 灯条引脚 (D26)
-#define NUM_LEDS   12            // LED 数量
+// 定义引脚
+#define BUTTON_PIN 13     // 按钮连接到D13
+#define SERVO_PIN 2       // 舵机连接到D2
+#define LED_PIN 25        // WS2812 LED灯带连接到D25
+#define LED_COUNT 12      // LED灯带数量为12
 
-// 舵机和 LED 灯条对象
-Servo servo;
-Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+// 创建对象
+Servo myServo;
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 // 状态变量
-bool ledState = false;          // LED 状态（false: 关闭, true: 开启）
-bool servoState = false;        // 舵机状态（false: 关闭, true: 开启）
-bool lastTouchState = LOW;      // 上次触摸状态
-bool longPressTriggered = false;  // 是否触发了长按
-unsigned long touchStartTime = 0;  // 触摸开始时间
-const unsigned long longPressDuration = 5000;  // 长按时长（5秒）
+bool servoState = false;   // 舵机状态（false为关闭）
+bool ledState = false;     // LED灯状态（false为关闭）
+bool buttonPressed = false;
+unsigned long buttonPressTime = 0;
+const long longPressTime = 3000;  // 长按定义为3秒
+bool longPressTriggered = false;  // 长按是否已触发标志
 
 void setup() {
-    Serial.begin(115200);
-    
-    // 初始化舵机
-    servo.attach(servoPin);
-    servo.write(0);  // 初始位置（关闭）
-
-    // 初始化 LED 灯条
-    strip.begin();
-    strip.show();
-    strip.setBrightness(50);
-    setLEDColor(0, 0, 0);  // 初始关闭 LED
-
-    // 初始化触摸传感器引脚
-    pinMode(touchPin, INPUT);
-    Serial.println("Setup complete");
+  // 初始化串口
+  Serial.begin(115200);
+  
+  // 初始化按钮引脚为输入，使用内部上拉电阻
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  
+  // 初始化舵机
+  myServo.attach(SERVO_PIN);
+  myServo.write(0);  // 初始位置为0度
+  
+  // 初始化LED灯带
+  strip.begin();
+  strip.show();  // 初始化为全部关闭
+  strip.setBrightness(50);  // 设置亮度（0-255）
 }
 
 void loop() {
-    // 读取触摸传感器状态
-    bool currentTouchState = digitalRead(touchPin);
-
-    // 检测触摸按下（上升沿）
-    if (currentTouchState == HIGH && lastTouchState == LOW) {
-        touchStartTime = millis();  // 记录触摸开始时间
-        longPressTriggered = false;  // 重置长按标志
-        Serial.println("Touch detected");
-    }
-
-    // 检测触摸松开（下降沿）
-    if (currentTouchState == LOW && lastTouchState == HIGH) {
-        unsigned long touchDuration = millis() - touchStartTime;
-        // 只有在未触发长按的情况下，才认为是短按
-        if (touchDuration < longPressDuration && !longPressTriggered) {
-            // 短按：切换 LED 状态
-            ledState = !ledState;
-            if (ledState) {
-                setLEDColor(255, 255, 255);  // 白色（点亮）
-                Serial.println("LED turned ON");
-            } else {
-                setLEDColor(0, 0, 0);  // 关闭
-                Serial.println("LED turned OFF");
-            }
-        }
-        longPressTriggered = false;  // 松手后重置长按标志
-    }
-
-    // 检测长按（5秒）
-    if (currentTouchState == HIGH && (millis() - touchStartTime >= longPressDuration)) {
-        // 长按：切换舵机状态
-        servoState = !servoState;
-        if (servoState) {
-            moveServo(0, 180, 10, 20);  // 打开（0 -> 180 度）
-            Serial.println("Servo opened");
-        } else {
-            moveServo(180, 0, -10, 20);  // 关闭（180 -> 0 度）
-            Serial.println("Servo closed");
-        }
-        longPressTriggered = true;  // 标记长按已触发
-        touchStartTime = millis();  // 重置 touchStartTime，避免重复触发长按
-    }
-
-    lastTouchState = currentTouchState;
+  // 检测按钮状态
+  checkButton();
 }
 
-// 设置 LED 颜色
-void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
-    for (int i = 0; i < NUM_LEDS; i++) {
-        strip.setPixelColor(i, strip.Color(r, g, b));
+void checkButton() {
+  // 读取按钮状态（低电平为按下）
+  bool currentState = !digitalRead(BUTTON_PIN);
+  
+  // 按钮按下
+  if (currentState && !buttonPressed) {
+    buttonPressed = true;
+    buttonPressTime = millis();
+    longPressTriggered = false;
+    Serial.println("按钮被按下");
+  } 
+  
+  // 按钮持续按下，检查是否达到长按时间
+  else if (currentState && buttonPressed) {
+    unsigned long pressDuration = millis() - buttonPressTime;
+    
+    // 达到长按时间且尚未触发长按动作
+    if (pressDuration >= longPressTime && !longPressTriggered) {
+      toggleServo();
+      longPressTriggered = true;  // 设置标志，防止重复触发
+      Serial.println("长按3秒检测到，切换舵机状态");
+    }
+  }
+  
+  // 按钮释放
+  else if (!currentState && buttonPressed) {
+    unsigned long pressDuration = millis() - buttonPressTime;
+    buttonPressed = false;
+    
+    // 短按（小于3秒）且没有触发过长按动作 - 控制LED灯
+    if (pressDuration < longPressTime && !longPressTriggered) {
+      toggleLED();
+      Serial.println("短按检测到，切换LED状态");
+    }
+    
+    // 重置长按触发标志
+    longPressTriggered = false;
+  }
+}
+
+// 切换舵机状态
+void toggleServo() {
+  servoState = !servoState;
+  
+  if (servoState) {
+    // 打开舵机（旋转到180度）
+    myServo.write(180);
+    Serial.println("舵机：开启（180度）");
+  } else {
+    // 关闭舵机（旋转到0度）
+    myServo.write(0);
+    Serial.println("舵机：关闭（0度）");
+  }
+}
+
+// 切换LED灯状态
+void toggleLED() {
+  ledState = !ledState;
+  
+  if (ledState) {
+    // 打开LED灯（设置为蓝色）
+    for (int i = 0; i < LED_COUNT; i++) {
+      strip.setPixelColor(i, strip.Color(0, 0, 255));
     }
     strip.show();
-}
-
-// 移动舵机
-void moveServo(int startAngle, int endAngle, int step, int delayTime) {
-    if (step > 0) {
-        for (int angle = startAngle; angle <= endAngle; angle += step) {
-            servo.write(angle);
-            delay(delayTime);
-        }
-    } else {
-        for (int angle = startAngle; angle >= endAngle; angle += step) {
-            servo.write(angle);
-            delay(delayTime);
-        }
-    }
+    Serial.println("LED灯带：开启");
+  } else {
+    // 关闭LED灯
+    strip.clear();
+    strip.show();
+    Serial.println("LED灯带：关闭");
+  }
 }

@@ -10,7 +10,7 @@ const int touchPin = 13;        // TTP223 触摸传感器信号引脚
 #define LED_PIN1    26          // D26, Device A 的进度灯
 #define LED_PIN2    25          // D25, Device B 的进度灯
 #define LED_PIN3    23          // D23, 照明灯
-#define NUM_LEDS   8            // 每个进度灯条的 LED 数量
+#define NUM_LEDS   12            // 每个进度灯条的 LED 数量
 #define NUM_LEDS3  8            // 照明灯条的 LED 数量
 
 // 舵机和 LED 灯条对象
@@ -209,9 +209,6 @@ void reconnectMQTT() {
             Serial.println("Connected to MQTT broker");
             client.subscribe(mqtt_topic_isReading_B);
             client.subscribe(mqtt_topic_totalDailyTime_B);
-            // 发布初始状态
-            client.publish(mqtt_topic_isReading_A, "false");
-            client.publish(mqtt_topic_totalDailyTime_A, "0"); // 启动时上传 0
         } else {
             Serial.print("Failed, rc=");
             Serial.print(client.state());
@@ -308,13 +305,13 @@ void updateProgressLEDs() {
     } else {
         unsigned long secondsA = displayTimeA / 1000;
         if (secondsA < 30) {
-            ledCountA = 2;  // < 30s，亮 2 盏
+            ledCountA = 3;  // < 30s，亮 2 盏
         } else if (secondsA <= 60) {
-            ledCountA = 4;  // 30-60s，亮 4 盏
+            ledCountA = 6;  // 30-60s，亮 4 盏
         } else if (secondsA <= 120) {
-            ledCountA = 6;  // 60-120s，亮 6 盏
+            ledCountA =9;  // 60-120s，亮 6 盏
         } else {
-            ledCountA = 8;  // > 120s，亮 8 盏
+            ledCountA = 12;  // > 120s，亮 8 盏
         }
         for (int i = 0; i < NUM_LEDS; i++) {
             if (i < ledCountA) {
@@ -336,13 +333,13 @@ void updateProgressLEDs() {
     } else {
         unsigned long secondsB = totalDailyTimeB / 1000;
         if (secondsB < 30) {
-            ledCountB = 2;  // < 30s，亮 2 盏
+            ledCountB = 3;  // < 30s，亮 2 盏
         } else if (secondsB <= 60) {
-            ledCountB = 4;  // 30-60s，亮 4 盏
+            ledCountB = 6;  // 30-60s，亮 4 盏
         } else if (secondsB <= 120) {
-            ledCountB = 6;  // 60-120s，亮 6 盏
+            ledCountB = 9;  // 60-120s，亮 6 盏
         } else {
-            ledCountB = 8;  // > 120s，亮 8 盏
+            ledCountB = 12;  // > 120s，亮 8 盏
         }
         for (int i = 0; i < NUM_LEDS; i++) {
             if (i < ledCountB) {
