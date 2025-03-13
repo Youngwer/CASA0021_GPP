@@ -36,19 +36,19 @@ void moveServos(int startAngle, int endAngle, int step, int delayTime) {
     }
 }
 
-// 打开书（将舵机移动到打开位置）
+// 打开书（将舵机渐进移动到打开位置）
 void openBook() {
     Serial.println("Opening the book...");
-    // 直接设置舵机位置，不使用moveServos渐变
-    setServoAngles(180, 0);
+    // 使用渐进式移动而不是直接设置位置
+    moveServos(0, 180, 5, 100); // 从0度到180度，每次移动5度，每步延迟200ms
     Serial.println("Book is open!");
 }
 
-// 关闭书（将舵机移动到闭合位置）
+// 关闭书（将舵机渐进移动到闭合位置）
 void closeBook() {
     Serial.println("Closing the book...");
-    // 直接设置舵机位置，不使用moveServos渐变
-    setServoAngles(0, 180);
+    // 使用渐进式移动而不是直接设置位置
+    moveServos(180, 0, -5, 100); // 从180度到0度，每次移动-5度，每步延迟200ms
     Serial.println("Book is closed!");
 }
 

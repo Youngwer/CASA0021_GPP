@@ -103,7 +103,7 @@ void updateTimeLEDs() {
     // 如果总时间为0，所有灯亮红色
     if (totalTime == 0) {
         for (int i = 0; i < NUM_TIME_LEDS; i++) {
-            timeStrip.setPixelColor(i, timeStrip.Color(255, 0, 0));  // 红色
+            timeStrip.setPixelColor(i, timeStrip.Color(255,255,255));  // 红色
         }
         timeStrip.show();
         return;
@@ -125,7 +125,7 @@ void updateTimeLEDs() {
 
     for (int i = 0; i < NUM_TIME_LEDS; i++) {
         if (i < ledsToLight) {
-            timeStrip.setPixelColor(i, timeStrip.Color(0, 255, 0));  // 绿色
+            timeStrip.setPixelColor(i, timeStrip.Color(255, 102, 178));  // 绿色
         } else {
             timeStrip.setPixelColor(i, timeStrip.Color(0, 0, 0));    // 关闭
         }
@@ -145,7 +145,7 @@ void updateDeviceBTimeLEDs() {
     // 如果总时间为0，所有灯亮红色
     if (totalSeconds == 0) {
         for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
-            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(255, 0, 0));  // 红色
+            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(255,255,255));  // 红色
         }
         deviceBTimeStrip.show();
         return;
@@ -167,7 +167,7 @@ void updateDeviceBTimeLEDs() {
 
     for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
         if (i < ledsToLight) {
-            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 255, 0));  // 绿色
+            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(102,178,255));  // 绿色
         } else {
             deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 0, 0));    // 关闭
         }
