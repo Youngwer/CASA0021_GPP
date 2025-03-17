@@ -43,7 +43,8 @@ void setup() {
     if (wifiReady) {
         setupMQTT();
     }
-    
+        // 确保所有LED灯带初始状态为关闭
+    setLEDColor(0, 0, 0);
     Serial.println("Setup complete");
 }
 
@@ -73,9 +74,9 @@ void loop() {
     // 根据设备A和B的阅读状态更新LED效果
     if (isOpen) {
         if (deviceBIsReading) {
-            updateBreathingEffect(255, 0, 0);  // 红色呼吸灯效果
+            updateBreathingEffect(255, 102 , 178);  // 粉色呼吸灯效果
         } else {
-            setLEDColor(255, 0, 0);            // 固定红色
+            setLEDColor(255, 102 , 178);            // 固定粉色
         }
     }
 }
