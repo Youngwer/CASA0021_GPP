@@ -8,6 +8,47 @@ int brightness = 0;                      // 当前亮度（0-255）
 bool increasing = true;                  // 亮度是否在增加
 unsigned long lastBreathTime = 0;        // 上次呼吸灯更新时间
 
+// 设置所有主LED灯带的颜色
+void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
+    // 设置第一个灯带（引脚23）
+    for (int i = 0; i < NUM_LEDS; i++) {
+        strip.setPixelColor(i, strip.Color(r, g, b));
+    }
+    strip.show();
+    
+    // 设置第二个灯带（引脚22），保持与第一个灯带同步
+    for (int i = 0; i < NUM_LEDS; i++) {
+        strip2.setPixelColor(i, strip2.Color(r, g, b));
+    }
+    strip2.show();
+    
+    Serial.print("设置主照明灯颜色：R=");
+    Serial.print(r);
+    Serial.print(", G=");
+    Serial.print(g);
+    Serial.print(", B=");
+    Serial.println(b);
+}
+
+// 设置LED灯带颜色并调整亮度
+void setStripColorWithBrightness(uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
+    uint8_t r = (red * brightness) / 255;
+    uint8_t g = (green * brightness) / 255;
+    uint8_t b = (blue * brightness) / 255;
+    
+    // 设置第一个灯带（引脚23）
+    for (int i = 0; i < strip.numPixels(); i++) {
+        strip.setPixelColor(i, strip.Color(r, g, b));
+    }
+    strip.show();
+    
+    // 设置第二个灯带（引脚22）保持同步
+    for (int i = 0; i < strip2.numPixels(); i++) {
+        strip2.setPixelColor(i, strip2.Color(r, g, b));
+    }
+    strip2.show();
+}
+
 // 初始化所有LED灯带
 void setupLEDs() {
     // 初始化主照明灯带1（引脚23）
@@ -29,41 +70,17 @@ void setupLEDs() {
     deviceBTimeStrip.begin();
     deviceBTimeStrip.show();
     deviceBTimeStrip.setBrightness(50);
+    
+    // 初始化时，确保所有灯都是关闭状态
+    setLEDColor(0, 0, 0);
+    timeStrip.clear();
+    timeStrip.show();
+    deviceBTimeStrip.clear();
+    deviceBTimeStrip.show();
+    
+    Serial.println("所有LED灯带已初始化并设置为关闭状态");
 }
 
-// 设置所有主LED灯带的颜色
-void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
-    // 设置第一个灯带（引脚23）
-    for (int i = 0; i < NUM_LEDS; i++) {
-        strip.setPixelColor(i, strip.Color(r, g, b));
-    }
-    strip.show();
-    
-    // 设置第二个灯带（引脚22），保持与第一个灯带同步
-    for (int i = 0; i < NUM_LEDS; i++) {
-        strip2.setPixelColor(i, strip2.Color(r, g, b));
-    }
-    strip2.show();
-}
-
-// 设置LED灯带颜色并调整亮度
-void setStripColorWithBrightness(uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness) {
-    uint8_t r = (red * brightness) / 255;
-    uint8_t g = (green * brightness) / 255;
-    uint8_t b = (blue * brightness) / 255;
-    
-    // 设置第一个灯带（引脚23）
-    for (int i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(r, g, b));
-    }
-    strip.show();
-    
-    // 设置第二个灯带（引脚22）保持同步
-    for (int i = 0; i < strip2.numPixels(); i++) {
-        strip2.setPixelColor(i, strip2.Color(r, g, b));
-    }
-    strip2.show();
-}
 
 // 非阻塞呼吸灯效果
 void updateBreathingEffect(uint8_t red, uint8_t green, uint8_t blue) {
@@ -94,38 +111,42 @@ void updateTimeLEDs() {
         return;
     }
     
+    // 如果设备A未阅读（且不是当前在阅读），则关闭进度灯
+    if (dailyReadingTime == 0 && !isOpen) {
+        timeStrip.clear();
+        timeStrip.show();
+        return;
+    }
+    
     unsigned long totalTime = dailyReadingTime;
     if (isOpen && startTime > 0) {
         totalTime += (millis() - startTime);
     }
     unsigned long totalSeconds = totalTime / 1000;
 
-    // 如果总时间为0，所有灯亮红色
-    if (totalTime == 0) {
-        for (int i = 0; i < NUM_TIME_LEDS; i++) {
-            timeStrip.setPixelColor(i, timeStrip.Color(255,255,255));  // 红色
-        }
-        timeStrip.show();
-        return;
-    }
-
     // 正常亮灯逻辑
     int ledsToLight = 0;
-    if (totalSeconds < 900) {
+    if (totalSeconds < 450) {
+        ledsToLight = 1;
+    } else if (totalSeconds < 900) {
         ledsToLight = 2;
-    } else if (totalSeconds < 1800) {
+    } else if (totalSeconds < 1350) {
         ledsToLight = 3;
+    } else if (totalSeconds < 1800) {
+        ledsToLight = 4;
+    } else if (totalSeconds < 2250) {
+        ledsToLight = 5;
     } else if (totalSeconds < 2700) {
         ledsToLight = 6;
-    } else if (totalSeconds < 3600) {
-        ledsToLight = 9;
+    } else if (totalSeconds < 3150) {
+        ledsToLight = 7;
     } else {
-        ledsToLight = 12;
+        ledsToLight = 8;
     }
 
     for (int i = 0; i < NUM_TIME_LEDS; i++) {
         if (i < ledsToLight) {
-            timeStrip.setPixelColor(i, timeStrip.Color(255, 102, 178));  // 绿色
+            timeStrip.setPixelColor(i, timeStrip.Color(255, 102, 178));  // 粉色
         } else {
             timeStrip.setPixelColor(i, timeStrip.Color(0, 0, 0));    // 关闭
         }
@@ -140,34 +161,38 @@ void updateDeviceBTimeLEDs() {
         return;
     }
     
-    unsigned long totalSeconds = deviceBTotalDailyTime;
-
-    // 如果总时间为0，所有灯亮红色
-    if (totalSeconds == 0) {
-        for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
-            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(255,255,255));  // 红色
-        }
+    // 如果设备B未阅读，则关闭进度灯
+    if (deviceBTotalDailyTime == 0 && !deviceBIsReading) {
+        deviceBTimeStrip.clear();
         deviceBTimeStrip.show();
         return;
     }
+    
+    unsigned long totalSeconds = deviceBTotalDailyTime;
 
     // 正常亮灯逻辑
     int ledsToLight = 0;
-    if (totalSeconds < 900) {
+    if (totalSeconds < 450) {
+        ledsToLight = 1;
+    } else if (totalSeconds < 900) {
         ledsToLight = 2;
-    } else if (totalSeconds < 1800) {
+    } else if (totalSeconds < 1350) {
         ledsToLight = 3;
+    } else if (totalSeconds < 1800) {
+        ledsToLight = 4;
+    } else if (totalSeconds < 2250) {
+        ledsToLight = 5;
     } else if (totalSeconds < 2700) {
         ledsToLight = 6;
-    } else if (totalSeconds < 3600) {
-        ledsToLight = 9;
+    } else if (totalSeconds < 3150) {
+        ledsToLight = 7;
     } else {
-        ledsToLight = 12;
+        ledsToLight = 8;
     }
-
+    
     for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
         if (i < ledsToLight) {
-            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(102,178,255));  // 绿色
+            deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(102, 178, 255));  // 蓝色
         } else {
             deviceBTimeStrip.setPixelColor(i, deviceBTimeStrip.Color(0, 0, 0));    // 关闭
         }

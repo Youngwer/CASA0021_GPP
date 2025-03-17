@@ -15,9 +15,9 @@ const int BUTTON_PIN = 13;        // 按钮连接的GPIO
 #define LED_PIN2 22               // 状态指示灯引脚2（额外照明）
 #define NUM_LEDS 8                // 每个状态指示灯的LED数量
 #define TIME_LED_PIN 25           // 设备A时间指示灯引脚
-#define NUM_TIME_LEDS 12          // 设备A时间指示灯LED数量
+#define NUM_TIME_LEDS 8          // 设备A时间指示灯LED数量
 #define DEVICEB_TIME_LED_PIN 26   // 设备B时间指示灯引脚
-#define NUM_DEVICEB_TIME_LEDS 12  // 设备B时间指示灯LED数量
+#define NUM_DEVICEB_TIME_LEDS 8 // 设备B时间指示灯LED数量
 
 const char* MQTT_TOPIC_ISREADING_A = "student/ucfnwy2/DeviceB/isReading";          // 改为DeviceB
 const char* MQTT_TOPIC_TOTALDAILYTIME_A = "student/ucfnwy2/DeviceB/totalDailyTime"; // 改为DeviceB

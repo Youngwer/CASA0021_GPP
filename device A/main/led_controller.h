@@ -128,16 +128,22 @@ void updateTimeLEDs() {
 
     // 正常亮灯逻辑
     int ledsToLight = 0;
-    if (totalSeconds < 900) {
+    if (totalSeconds < 450) {
+        ledsToLight = 1;
+    } else if (totalSeconds < 900) {
         ledsToLight = 2;
+    } else if (totalSeconds < 1350) {
+        ledsToLight =3;
     } else if (totalSeconds < 1800) {
-        ledsToLight = 3;
+        ledsToLight =4;
+    } else if (totalSeconds < 2250) {
+        ledsToLight =5;
     } else if (totalSeconds < 2700) {
         ledsToLight = 6;
-    } else if (totalSeconds < 3600) {
-        ledsToLight = 9;
+    } else if (totalSeconds < 3150) {
+        ledsToLight = 7;
     } else {
-        ledsToLight = 12;
+        ledsToLight = 8;
     }
 
     for (int i = 0; i < NUM_TIME_LEDS; i++) {
@@ -170,16 +176,22 @@ void updateDeviceBTimeLEDs() {
 
     // 正常亮灯逻辑
     int ledsToLight = 0;
-    if (totalSeconds < 900) {
+    if (totalSeconds < 450) {
+        ledsToLight = 1;
+    } else if (totalSeconds < 900) {
         ledsToLight = 2;
+    } else if (totalSeconds < 1350) {
+        ledsToLight =3;
     } else if (totalSeconds < 1800) {
-        ledsToLight = 3;
+        ledsToLight =4;
+    } else if (totalSeconds < 2250) {
+        ledsToLight =5;
     } else if (totalSeconds < 2700) {
         ledsToLight = 6;
-    } else if (totalSeconds < 3600) {
-        ledsToLight = 9;
+    } else if (totalSeconds < 3150) {
+        ledsToLight = 7;
     } else {
-        ledsToLight = 12;
+        ledsToLight = 8;
     }
 
     for (int i = 0; i < NUM_DEVICEB_TIME_LEDS; i++) {
