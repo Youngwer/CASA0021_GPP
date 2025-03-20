@@ -953,38 +953,40 @@ class HomePageState extends State<HomePage> {
                 children: [
                   // Recent Reading Card
                   Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF4ED2C),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(15.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Recent',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Reading',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RecentReadingPage(),
                           ),
-                        ],
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4ED2C),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Recent',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Reading',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1465,7 +1467,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         author: authorController.text,
                         totalPages: pages,
                       );
-                      books.add(newBook);
+                      books.insert(0, newBook);
                       Navigator.of(context).pop(true);
                     }
                   },
@@ -1872,4 +1874,277 @@ class ConfettiPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ConfettiPainter oldDelegate) => true;
+}
+
+class RecentReadingPage extends StatefulWidget {
+  const RecentReadingPage({super.key});
+
+  @override
+  State<RecentReadingPage> createState() => _RecentReadingPageState();
+}
+
+class _RecentReadingPageState extends State<RecentReadingPage> {
+  String selectedPeriod = 'week';
+  DateTime selectedDate = DateTime.now();
+  late DateTime weekStart;
+  late DateTime weekEnd;
+  List<double> chartData = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _updateWeekDates(selectedDate);
+    chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
+  }
+  
+  void _updateWeekDates(DateTime date) {
+    // 获取所选日期所在周的周一和周日
+    weekStart = date.subtract(Duration(days: date.weekday - 1));
+    weekEnd = weekStart.add(const Duration(days: 6));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Recent Reading'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 时间段选择按钮
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildPeriodButton('week'),
+                const SizedBox(width: 16),
+                _buildPeriodButton('month'),
+                const SizedBox(width: 16),
+                _buildPeriodButton('year'),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // 日历图标和日期
+            GestureDetector(
+              onTap: () => _showCalendarDialog(),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${weekStart.month}月${weekStart.day}日 - ${weekEnd.month}月${weekEnd.day}日, ${weekEnd.year}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // 折线图
+            Container(
+              height: 300,
+              padding: const EdgeInsets.all(16),
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: ChartPainter(
+                  data: chartData,
+                  weekStart: weekStart,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodButton(String period) {
+    bool isSelected = selectedPeriod == period;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedPeriod = period;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF4ED2C) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFF4ED2C) : Colors.grey,
+          ),
+        ),
+        child: Text(
+          period.toUpperCase(),
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.grey,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCalendarDialog() async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        DateTime tempSelectedDate = selectedDate;
+        return AlertDialog(
+          contentPadding: const EdgeInsets.all(16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CalendarDatePicker(
+                initialDate: selectedDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+                onDateChanged: (date) {
+                  tempSelectedDate = date;
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedDate = tempSelectedDate;
+                      _updateWeekDates(selectedDate);
+                      // 更新折线图数据
+                      _updateChartData();
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF4ED2C),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _updateChartData() {
+    // 这里可以根据选择的日期更新折线图数据
+    // 示例: 生成新的随机数据
+    setState(() {
+      chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
+    });
+  }
+}
+
+// 自定义折线图画笔
+class ChartPainter extends CustomPainter {
+  final List<double> data;
+  final List<String> labels;
+  final DateTime weekStart;
+
+  ChartPainter({
+    required this.data,
+    required this.weekStart,
+  }) : labels = List.generate(7, (index) {
+         final date = weekStart.add(Duration(days: index));
+         return '${date.month}/${date.day}';
+       });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFF4ED2C)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final pointPaint = Paint()
+      ..color = const Color(0xFFF4ED2C)
+      ..style = PaintingStyle.fill;
+
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+
+    // 绘制坐标轴
+    canvas.drawLine(
+      Offset(40, size.height - 40),
+      Offset(40, 20),
+      Paint()..color = Colors.grey,
+    );
+    canvas.drawLine(
+      Offset(40, size.height - 40),
+      Offset(size.width - 20, size.height - 40),
+      Paint()..color = Colors.grey,
+    );
+
+    // 绘制折线和数据点
+    final double xStep = (size.width - 60) / (data.length - 1);
+    final double yStep = (size.height - 60) / 6; // 6个刻度
+
+    final path = Path();
+    for (int i = 0; i < data.length; i++) {
+      double x = 40 + i * xStep;
+      double y = size.height - 40 - (data[i] / 10) * yStep;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+
+      // 绘制数据点
+      canvas.drawCircle(Offset(x, y), 4, pointPaint);
+
+      // 绘制x轴标签
+      textPainter.text = TextSpan(
+        text: labels[i],
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(x - textPainter.width / 2, size.height - 35),
+      );
+    }
+
+    // 绘制y轴刻度
+    for (int i = 0; i <= 6; i++) {
+      textPainter.text = TextSpan(
+        text: '${i * 10}',
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(5, size.height - 40 - i * yStep - textPainter.height / 2),
+      );
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
