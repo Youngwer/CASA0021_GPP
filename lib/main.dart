@@ -721,12 +721,31 @@ class HomePageState extends State<HomePage> {
                                           borderRadius: const BorderRadius.vertical(
                                             top: Radius.circular(8),
                                           ),
-                                          child: Image.asset(
-                                            book.imageUrl,
-                                            height: 120,
-                                            width: double.infinity,
-                                            fit: BoxFit.cover,
-                                          ),
+                                          child: book.imageUrl.isEmpty
+                                              ? Container(
+                                                  height: 120,
+                                                  width: double.infinity,
+                                                  color: Colors.grey[200],
+                                                  child: Center(
+                                                    child: Text(
+                                                      book.title,
+                                                      style: const TextStyle(
+                                                        color: Colors.black87,
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                )
+                                              : Image.asset(
+                                                  book.imageUrl,
+                                                  height: 120,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                ),
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
@@ -736,17 +755,18 @@ class HomePageState extends State<HomePage> {
                                               Text(
                                                 book.title,
                                                 style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
                                                   fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+                                              const SizedBox(height: 2),
                                               Text(
                                                 book.author,
                                                 style: const TextStyle(
-                                                  color: Colors.grey,
                                                   fontSize: 10,
+                                                  color: Colors.grey,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -1035,6 +1055,16 @@ class Book {
     required this.totalPages,
     this.currentPage = 0,
   });
+
+  // 添加一个新的构造函数用于创建新书籍
+  Book.create({
+    required this.title,
+    required this.author,
+    required this.totalPages,
+  })  : imageUrl = '',  // 空字符串表示使用默认灰色背景
+        progress = 0.0,
+        readMinutes = 0,
+        currentPage = 0;
 }
 
 class LibraryPage extends StatefulWidget {
@@ -1170,45 +1200,39 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _buildAddBookCard() {
-    return Container(
-      margin: const EdgeInsets.all(1), // 添加小边距避免阴影被裁剪
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.hardEdge, // 使用 hardEdge 确保圆角效果
-      child: Material( // 添加 Material 组件
-        color: Colors.white,
-        child: InkWell( // 添加 InkWell 支持点击效果
-          onTap: () {
-            // 处理添加新书的点击事件
-          },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(
-                Icons.add,
-                size: 40,
+    return GestureDetector(
+      onTap: () => _showAddBookDialog(),
+      child: Container(
+        margin: const EdgeInsets.all(1),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              Icons.add,
+              size: 40,
+              color: Colors.grey,
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Add\na new book',
+              textAlign: TextAlign.center,
+              style: TextStyle(
                 color: Colors.grey,
+                fontSize: 16,
               ),
-              SizedBox(height: 8),
-              Text(
-                'Add\na new book',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1240,12 +1264,31 @@ class _LibraryPageState extends State<LibraryPage> {
           // 第一行：书籍封面图片
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            child: Image.asset(
-              book.imageUrl,
-              height: 180, // 保持图片高度不变
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            child: book.imageUrl.isEmpty
+                ? Container(
+                    height: 180,
+                    width: double.infinity,
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: Text(
+                        book.title,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                : Image.asset(
+                    book.imageUrl,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
           ),
           // 第二行到第四行：书籍信息
           Padding(
@@ -1310,6 +1353,149 @@ class _LibraryPageState extends State<LibraryPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _showAddBookDialog() async {
+    final titleController = TextEditingController();
+    final authorController = TextEditingController();
+    final pagesController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.95),
+          contentPadding: const EdgeInsets.all(16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Add a new book',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Text('book name: '),
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Text('author: '),
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextField(
+                        controller: authorController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Text('total page: '),
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextField(
+                        controller: pagesController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final pages = int.tryParse(pagesController.text) ?? 0;
+                    if (titleController.text.isNotEmpty && 
+                        authorController.text.isNotEmpty && 
+                        pages > 0) {
+                      final newBook = Book.create(
+                        title: titleController.text,
+                        author: authorController.text,
+                        totalPages: pages,
+                      );
+                      books.add(newBook);
+                      Navigator.of(context).pop(true);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF4ED2C),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (result == true) {
+      setState(() {
+        filteredBooks = List.from(books);
+      });
+    }
   }
 }
 
