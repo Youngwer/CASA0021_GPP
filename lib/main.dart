@@ -2,6 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'dart:async';
+import 'dart:math';
+
+final List<Book> books = [
+  Book(
+    title: 'Educated',
+    author: 'Tara Westover',
+    imageUrl: 'assets/images/book1_educated.jpg',
+    progress: 0.0,
+    readMinutes: 0,
+    totalPages: 320,
+    currentPage: 0,
+  ),
+  Book(
+    title: 'AI Superpowers',
+    author: 'Kai-Fu Lee',
+    imageUrl: 'assets/images/book2_AI.jpg',
+    progress: 0.0,
+    readMinutes: 0,
+    totalPages: 300,
+    currentPage: 0,
+  ),
+  Book(
+    title: 'Dominicana',
+    author: 'Angie Cruz',
+    imageUrl: 'assets/images/book3_dominicana.jpg',
+    progress: 0.0,
+    readMinutes: 0,
+    totalPages: 250,
+    currentPage: 0,
+  ),
+  Book(
+    title: 'Steppenwolf',
+    author: 'Hermann Hesse',
+    imageUrl: 'assets/images/book4_steppenwolf.jpg',
+    progress: 0.0,
+    readMinutes: 0,
+    totalPages: 200,
+    currentPage: 0,
+  ),
+  Book(
+    title: 'West with the Night',
+    author: 'Beryl Markham',
+    imageUrl: 'assets/images/book5_west.jpg',
+    progress: 0.0,
+    readMinutes: 0,
+    totalPages: 220,
+    currentPage: 0,
+  ),
+  Book(
+    title: 'Muscle',
+    author: 'Alan Trotter',
+    imageUrl: 'assets/images/book6_muscle.jpg',
+    progress: 0.0,
+    readMinutes: 0,
+    totalPages: 180,
+    currentPage: 0,
+  ),
+];
 
 void main() {
   runApp(const MyApp());
@@ -345,27 +403,174 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  int _goalMinutes = 60;  // 默认目标时间
-  int _alreadyMinutes = 0;  // 已读时间
-  bool _isReading = false;  // 是否正在阅读
-  Timer? _timer;  // 计时器
+  int _goalMinutes = 60;
+  int _alreadyMinutes = 0;
+  bool _isReading = false;
+  Timer? _timer;
+  Book? _selectedBook;
+  int _noSpecificBookMinutes = 0;
+  final TextEditingController _searchController = TextEditingController();
+  List<Book> _searchResults = [];
+  bool _skipBookSelection = false;
 
-  void _startReading() {
-    setState(() {
-      _isReading = true;
-    });
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+  void _startReading() async {
+    final shouldStart = await _showBookSelectionDialog();
+    if (shouldStart == true) {
       setState(() {
-        _alreadyMinutes++;
+        _isReading = true;
       });
-    });
+      _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+        setState(() {
+          _alreadyMinutes++;
+          if (_selectedBook != null) {
+            _selectedBook!.readMinutes++;
+            _selectedBook!.progress = _selectedBook!.readMinutes / _goalMinutes;
+          } else {
+            _noSpecificBookMinutes++;
+          }
+        });
+      });
+    }
   }
 
-  void _stopReading() {
-    setState(() {
-      _isReading = false;
-    });
+  void _stopReading() async {
     _timer?.cancel();
+    
+    final result = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        TextEditingController pageController = TextEditingController();
+        bool noSpecificPage = false;
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white.withOpacity(0.95),
+              contentPadding: const EdgeInsets.all(16),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Finished Page',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'No.',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 60,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.black,
+                              width: 1.0,
+                            ),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: pageController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  CheckboxListTile(
+                    value: noSpecificPage,
+                    onChanged: (value) {
+                      setState(() {
+                        noSpecificPage = value ?? false;
+                        if (noSpecificPage) {
+                          pageController.clear();
+                        }
+                      });
+                    },
+                    title: const Text(
+                      'no specific page',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (!noSpecificPage) {
+                          int? pages = int.tryParse(pageController.text);
+                          if (pages != null) {
+                            if (_selectedBook != null) {
+                              _selectedBook!.currentPage = pages;
+                              Navigator.of(context).pop(true);
+                              await showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return ConfettiWidget(
+                                    onComplete: () {
+                                      Navigator.of(context).pop();
+                                      setState(() {
+                                        _isReading = false;
+                                      });
+                                    },
+                                  );
+                                },
+                              );
+                            }
+                          }
+                        } else {
+                          Navigator.of(context).pop(true);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF4ED2C),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        'Submit',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      setState(() {
+        _isReading = false;
+        _selectedBook = null;
+      });
+    }
   }
 
   Future<void> _showGoalPicker() async {
@@ -414,6 +619,195 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  Future<bool> _showBookSelectionDialog() async {
+    _searchResults = List.from(books);
+    bool? result = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white.withOpacity(0.95),
+              contentPadding: const EdgeInsets.all(16),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Select a book to read',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // 搜索框
+                    Container(
+                      height: 35,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() {
+                                  if (value.isEmpty) {
+                                    _searchResults = List.from(books);
+                                  } else {
+                                    _searchResults = books
+                                        .where((book) =>
+                                            book.title.toLowerCase().contains(value.toLowerCase()) ||
+                                            book.author.toLowerCase().contains(value.toLowerCase()))
+                                        .toList();
+                                  }
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                hintText: 'Search',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // 书本列表
+                    SizedBox(
+                      height: 180,
+                      child: _searchResults.isEmpty
+                          ? const Center(child: Text('No result'))
+                          : ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _searchResults.length,
+                              itemBuilder: (context, index) {
+                                final book = _searchResults[index];
+                                final isSelected = book == _selectedBook;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedBook = book;
+                                      _skipBookSelection = false;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 120,
+                                    margin: const EdgeInsets.only(right: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected ? const Color(0xFFF4ED2C) : Colors.transparent,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: const BorderRadius.vertical(
+                                            top: Radius.circular(8),
+                                          ),
+                                          child: Image.asset(
+                                            book.imageUrl,
+                                            height: 120,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                book.title,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              Text(
+                                                book.author,
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 10,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                    // 暂不选择具体书本的选项
+                    CheckboxListTile(
+                      value: _skipBookSelection,
+                      onChanged: (value) {
+                        setState(() {
+                          _skipBookSelection = value ?? false;
+                          if (_skipBookSelection) {
+                            _selectedBook = null;
+                          }
+                        });
+                      },
+                      title: const Text(
+                        'no specific book this time',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 16),
+                    // Submit 按钮
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_skipBookSelection || _selectedBook != null) {
+                            Navigator.of(context).pop(true);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF4ED2C),
+                          foregroundColor: Colors.black,
+                        ),
+                        child: const Text('Submit'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    return result ?? false;
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -425,18 +819,18 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Today's Reading"),
-        backgroundColor: const Color(0xFFC2C2C6), // 将标题栏背景改为相同的灰色
-        elevation: 0, // 移除阴影效果，使其与背景完全融合
+        backgroundColor: const Color(0xFFC2C2C6),
+        elevation: 0,
       ),
       backgroundColor: const Color(0xFFC2C2C6),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 上半部分可以先空着，后续添加半圆图形
-            const SizedBox(height: 40),
-            // Already, Start button, Goal 部分
+            // 增加上方空间，将计时器下移
+            const Expanded(flex: 4, child: SizedBox()),
+            
+            // 计时器部分
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -446,28 +840,14 @@ class HomePageState extends State<HomePage> {
                   children: [
                     const Text(
                       'Already',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black, // 将 Already 文本改为黑色
-                      ),
+                      style: TextStyle(fontSize: 14),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          '$_alreadyMinutes',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Text(
-                          'min',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '${_alreadyMinutes}min',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Container(
                       height: 2,
@@ -476,6 +856,7 @@ class HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
+                
                 // Start/Stop button
                 GestureDetector(
                   onTap: () {
@@ -513,7 +894,8 @@ class HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                // Goal time (clickable)
+                
+                // Goal time
                 GestureDetector(
                   onTap: _showGoalPicker,
                   child: Column(
@@ -521,28 +903,14 @@ class HomePageState extends State<HomePage> {
                     children: [
                       const Text(
                         'Goal',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black, // 将 Goal 文本改为黑色
-                        ),
+                        style: TextStyle(fontSize: 14),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            '$_goalMinutes',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Text(
-                            'min',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        '${_goalMinutes}min',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Container(
                         height: 2,
@@ -554,6 +922,94 @@ class HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+
+            const SizedBox(height: 14), // 使用固定高度代替 Expanded
+            
+            // Recent Reading 和 Device Setting 部分
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.35, // 稍微减小卡片高度
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Recent Reading Card
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4ED2C),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(15.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text(
+                                  'Recent',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Reading',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Device Setting Card
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD9D9D9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(15.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text(
+                                  'Device',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Setting',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10), // 使用固定高度保持与上方相同
           ],
         ),
       ),
@@ -561,17 +1017,297 @@ class HomePageState extends State<HomePage> {
   }
 }
 
-class LibraryPage extends StatelessWidget {
+class Book {
+  final String title;
+  final String author;
+  final String imageUrl;
+  double progress;
+  int readMinutes;
+  final int totalPages;
+  int currentPage;
+
+  Book({
+    required this.title,
+    required this.author,
+    required this.imageUrl,
+    this.progress = 0.0,
+    this.readMinutes = 0,
+    required this.totalPages,
+    this.currentPage = 0,
+  });
+}
+
+class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
+
+  @override
+  State<LibraryPage> createState() => _LibraryPageState();
+}
+
+class _LibraryPageState extends State<LibraryPage> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Book> filteredBooks = [];
+  bool isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    filteredBooks = List.from(books);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Library'),
+      backgroundColor: const Color(0xFFC2C2C6),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your book\nCollections',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // 修改搜索框
+              Container(
+                height: 35, // 减小搜索框高度
+                margin: const EdgeInsets.only(bottom: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value.isEmpty) {
+                              isSearching = false;
+                              filteredBooks = List.from(books);
+                            } else {
+                              isSearching = true;
+                              filteredBooks = books
+                                  .where((book) => 
+                                      book.title.toLowerCase().contains(value.toLowerCase()) ||
+                                      book.author.toLowerCase().contains(value.toLowerCase()))
+                                  .toList();
+                            }
+                          });
+                        },
+                        onSubmitted: (value) {
+                          // 处理键盘回车键搜索
+                          FocusScope.of(context).unfocus();
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Search',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        FocusScope.of(context).unfocus();
+                      },
+                    ),
+                    Container(
+                      height: 20,
+                      width: 1,
+                      color: Colors.grey[300],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.filter_list, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        // 过滤功能
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // 修改书籍网格部分
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.only(bottom: 40), // 将原来的 80 改为 40
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.55,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: (isSearching ? filteredBooks : books).length + 1,
+                  itemBuilder: (context, index) {
+                    return Transform.translate(
+                      offset: Offset(0, index % 2 == 1 ? 30 : -20),
+                      child: index == 0 
+                          ? _buildAddBookCard()
+                          : _buildBookCard(
+                              isSearching 
+                                  ? filteredBooks[index - 1] 
+                                  : books[index - 1]
+                            ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: const Center(
-        child: Text('Library Page Content'),
+    );
+  }
+
+  Widget _buildAddBookCard() {
+    return Container(
+      margin: const EdgeInsets.all(1), // 添加小边距避免阴影被裁剪
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.hardEdge, // 使用 hardEdge 确保圆角效果
+      child: Material( // 添加 Material 组件
+        color: Colors.white,
+        child: InkWell( // 添加 InkWell 支持点击效果
+          onTap: () {
+            // 处理添加新书的点击事件
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.add,
+                size: 40,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Add\na new book',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookCard(Book book) {
+    // 计算阅读进度百分比
+    double progressPercentage = book.totalPages > 0 
+        ? (book.currentPage / book.totalPages * 100).roundToDouble() 
+        : 0.0;
+    
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 第一行：书籍封面图片
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            child: Image.asset(
+              book.imageUrl,
+              height: 180, // 保持图片高度不变
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          // 第二行到第四行：书籍信息
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0), // 移除底部padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 第二行：书名
+                Text(
+                  book.title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                // 第三行：作者
+                Text(
+                  book.author,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                // 第四行：进度条和百分比
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6), // 只给进度条部分添加底部间距
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: book.currentPage / book.totalPages,
+                            backgroundColor: Colors.grey[200],
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFFF4ED2C),
+                            ),
+                            minHeight: 3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${progressPercentage.toInt()}%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -825,4 +1561,129 @@ class UserData {
   static bool isEmailRegistered(String email) {
     return _users.containsKey(email);
   }
+}
+
+class ConfettiWidget extends StatefulWidget {
+  final VoidCallback onComplete;
+  
+  const ConfettiWidget({
+    Key? key,
+    required this.onComplete,
+  }) : super(key: key);
+
+  @override
+  State<ConfettiWidget> createState() => _ConfettiWidgetState();
+}
+
+class _ConfettiWidgetState extends State<ConfettiWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  List<Confetti> confetti = [];
+  final Random random = Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    
+    // 创建50个彩色碎片
+    for (int i = 0; i < 50; i++) {
+      confetti.add(Confetti(random));
+    }
+    
+    _controller.forward().then((_) => widget.onComplete());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: ConfettiPainter(
+            confetti: confetti,
+            progress: _controller.value,
+          ),
+          size: Size.infinite,
+        );
+      },
+    );
+  }
+}
+
+class Confetti {
+  late double x;
+  late double y;
+  late Color color;
+  late double width;
+  late double height;
+  late double speed;
+  late double angle;
+
+  Confetti(Random random) {
+    x = random.nextDouble() * 300 + 50;
+    y = random.nextDouble() * 200 + 100;
+    // 使用更鲜艳的颜色
+    color = [
+      const Color(0xFFF4ED2C), // 黄色
+      const Color(0xFF00BCD4), // 青色
+      const Color(0xFFE91E63), // 粉红
+      const Color(0xFF9C27B0), // 紫色
+      const Color(0xFF4CAF50), // 绿色
+    ][random.nextInt(5)];
+    width = random.nextDouble() * 15 + 5; // 彩带宽度
+    height = random.nextDouble() * 4 + 2; // 彩带高度
+    speed = random.nextDouble() * 8 + 4;
+    angle = random.nextDouble() * pi * 2;
+  }
+}
+
+class ConfettiPainter extends CustomPainter {
+  final List<Confetti> confetti;
+  final double progress;
+
+  ConfettiPainter({required this.confetti, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var particle in confetti) {
+      final paint = Paint()
+        ..color = particle.color.withOpacity(1 - progress)
+        ..style = PaintingStyle.fill;
+      
+      double dx = particle.speed * progress * cos(particle.angle);
+      double dy = particle.speed * progress * sin(particle.angle) + 
+                  progress * progress * 30; // 减小重力效果
+      
+      canvas.save();
+      canvas.translate(particle.x + dx, particle.y + dy);
+      canvas.rotate(particle.angle);
+      
+      // 绘制彩带
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: particle.width * (1 - progress * 0.5),
+            height: particle.height,
+          ),
+          const Radius.circular(1),
+        ),
+        paint,
+      );
+      
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(ConfettiPainter oldDelegate) => true;
 }
