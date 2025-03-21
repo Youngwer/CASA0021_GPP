@@ -1,3 +1,4 @@
+//周视图用户名传递
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -167,7 +168,8 @@ class _LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(20, 15, 20, 8), // 增加顶部内边距从 12 到 15
+                  padding: const EdgeInsets.fromLTRB(
+                      20, 15, 20, 8), // 增加顶部内边距从 12 到 15
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
@@ -188,7 +190,8 @@ class _LoginPageState extends State<LoginPage> {
                             hintText: 'Email',
                             hintStyle: TextStyle(color: Colors.grey),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
                           ),
                         ),
                       ),
@@ -207,7 +210,8 @@ class _LoginPageState extends State<LoginPage> {
                             hintText: 'Password',
                             hintStyle: TextStyle(color: Colors.grey),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12), // 增加内边距
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12), // 增加内边距
                           ),
                         ),
                       ),
@@ -238,10 +242,14 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               );
                             } else {
-                              // 验证成功，跳转到主页
+                              // 获取用户名并传递给 MainPage
+                              final username = UserData.getUsername(email);
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => const MainPage()),
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      MainPage(username: username ?? ''),
+                                ),
                               );
                             }
                           },
@@ -269,7 +277,8 @@ class _LoginPageState extends State<LoginPage> {
                           TextButton(
                             onPressed: () {},
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 5), // 减小按钮垂直内边距到 2
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 5), // 减小按钮垂直内边距到 2
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -285,11 +294,13 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const SignUpPage()),
+                                MaterialPageRoute(
+                                    builder: (context) => const SignUpPage()),
                               );
                             },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 5), // 减小按钮垂直内边距到 2
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 5), // 减小按钮垂直内边距到 2
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -324,10 +335,12 @@ class _LoginPageState extends State<LoginPage> {
 
 class MyListView extends StatefulWidget {
   @override
-  ListViewState createState() {return ListViewState();}
+  ListViewState createState() {
+    return ListViewState();
+  }
 }
 
-class ListViewState extends State<MyListView>{
+class ListViewState extends State<MyListView> {
   late List<String> feeds;
 
   @override
@@ -336,43 +349,48 @@ class ListViewState extends State<MyListView>{
     feeds = [];
     startMQTT();
   }
+
   void updateList(String s) {
     setState(() {
-      feeds.insert(0,s);
+      feeds.insert(0, s);
     });
   }
-  Future<void> startMQTT() async{
-   final client = MqttServerClient('mqtt.cetools.org', '<my client id>');
-   client.port=1883;
-   client.setProtocolV311();
-   client.keepAlivePeriod = 30;
-   //final String username = 'username';
-   //final String password = 'password';
-   try {
-    await client.connect();
-   } catch (e) {
-    print('client exception - $e');
-    client.disconnect();
-    return;
-   }
 
-   if (client.connectionStatus!.state == MqttConnectionState.connected) {
-    print('Mosquitto client connected');
-   } else {
-    print('ERROR Mosquitto client connection failed - disconnecting, state is ${client.connectionStatus!.state}');
-    client.disconnect();
-   }
+  Future<void> startMQTT() async {
+    final client = MqttServerClient('mqtt.cetools.org', '<my client id>');
+    client.port = 1883;
+    client.setProtocolV311();
+    client.keepAlivePeriod = 30;
+    //final String username = 'username';
+    //final String password = 'password';
+    try {
+      await client.connect();
+    } catch (e) {
+      print('client exception - $e');
+      client.disconnect();
+      return;
+    }
 
-   const topic = 'student/CASA0014/plant/01';
-   client.subscribe(topic, MqttQos.atMostOnce);
+    if (client.connectionStatus!.state == MqttConnectionState.connected) {
+      print('Mosquitto client connected');
+    } else {
+      print(
+          'ERROR Mosquitto client connection failed - disconnecting, state is ${client.connectionStatus!.state}');
+      client.disconnect();
+    }
 
-   client.updates!.listen( (List<MqttReceivedMessage<MqttMessage?>>? c) {
-    final receivedMessage = c![0].payload as MqttPublishMessage;
-    final messageString = MqttPublishPayload.bytesToStringAsString(receivedMessage.payload.message);
-    print('Change notification:: topic is <${c[0].topic}>, payload is <-- $messageString -->');
-    updateList(messageString);
-   } );
- }
+    const topic = 'student/CASA0014/plant/01';
+    client.subscribe(topic, MqttQos.atMostOnce);
+
+    client.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
+      final receivedMessage = c![0].payload as MqttPublishMessage;
+      final messageString = MqttPublishPayload.bytesToStringAsString(
+          receivedMessage.payload.message);
+      print(
+          'Change notification:: topic is <${c[0].topic}>, payload is <-- $messageString -->');
+      updateList(messageString);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -385,18 +403,89 @@ class ListViewState extends State<MyListView>{
       },
     );
   }
-
 }
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final String username;
+
+  const MainPage({
+    super.key,
+    required this.username,
+  });
 
   @override
   MainPageState createState() => MainPageState();
 }
 
+class MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    // 在 build 方法中创建 _pages 列表，这样可以使用 widget.username
+    final List<Widget> _pages = [
+      HomePage(username: widget.username), // 传递用户名
+      const LibraryPage(),
+      const GroupPage(),
+      const SettingPage(),
+    ];
+
+    return Scaffold(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade300,
+              width: 1.0,
+            ),
+          ),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book_rounded),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: '',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
+          backgroundColor: Colors.white,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          elevation: 0,
+          onTap: (value) {
+            setState(() {
+              _selectedIndex = value;
+            });
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String username;
+
+  const HomePage({
+    super.key,
+    required this.username,
+  });
 
   @override
   HomePageState createState() => HomePageState();
@@ -435,14 +524,14 @@ class HomePageState extends State<HomePage> {
 
   void _stopReading() async {
     _timer?.cancel();
-    
+
     final result = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
         TextEditingController pageController = TextEditingController();
         bool noSpecificPage = false;
-        
+
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -663,8 +752,11 @@ class HomePageState extends State<HomePage> {
                                   } else {
                                     _searchResults = books
                                         .where((book) =>
-                                            book.title.toLowerCase().contains(value.toLowerCase()) ||
-                                            book.author.toLowerCase().contains(value.toLowerCase()))
+                                            book.title.toLowerCase().contains(
+                                                value.toLowerCase()) ||
+                                            book.author
+                                                .toLowerCase()
+                                                .contains(value.toLowerCase()))
                                         .toList();
                                   }
                                 });
@@ -673,12 +765,14 @@ class HomePageState extends State<HomePage> {
                                 hintText: 'Search',
                                 hintStyle: TextStyle(color: Colors.grey),
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 20),
                               ),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                            icon: const Icon(Icons.search,
+                                color: Colors.grey, size: 20),
                             onPressed: () {},
                           ),
                         ],
@@ -710,15 +804,19 @@ class HomePageState extends State<HomePage> {
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: isSelected ? const Color(0xFFF4ED2C) : Colors.transparent,
+                                        color: isSelected
+                                            ? const Color(0xFFF4ED2C)
+                                            : Colors.transparent,
                                         width: 2,
                                       ),
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         ClipRRect(
-                                          borderRadius: const BorderRadius.vertical(
+                                          borderRadius:
+                                              const BorderRadius.vertical(
                                             top: Radius.circular(8),
                                           ),
                                           child: book.imageUrl.isEmpty
@@ -732,11 +830,14 @@ class HomePageState extends State<HomePage> {
                                                       style: const TextStyle(
                                                         color: Colors.black87,
                                                         fontSize: 14,
-                                                        fontWeight: FontWeight.w500,
+                                                        fontWeight:
+                                                            FontWeight.w500,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       maxLines: 2,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                 )
@@ -750,7 +851,8 @@ class HomePageState extends State<HomePage> {
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 book.title,
@@ -849,7 +951,7 @@ class HomePageState extends State<HomePage> {
           children: [
             // 增加上方空间，将计时器下移
             const Expanded(flex: 4, child: SizedBox()),
-            
+
             // 计时器部分
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -876,7 +978,7 @@ class HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                
+
                 // Start/Stop button
                 GestureDetector(
                   onTap: () {
@@ -887,7 +989,8 @@ class HomePageState extends State<HomePage> {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -914,7 +1017,7 @@ class HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                
+
                 // Goal time
                 GestureDetector(
                   onTap: _showGoalPicker,
@@ -944,7 +1047,7 @@ class HomePageState extends State<HomePage> {
             ),
 
             const SizedBox(height: 14), // 使用固定高度代替 Expanded
-            
+
             // Recent Reading 和 Device Setting 部分
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.35, // 稍微减小卡片高度
@@ -958,7 +1061,9 @@ class HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const RecentReadingPage(),
+                            builder: (context) => RecentReadingPage(
+                              username: widget.username,
+                            ),
                           ),
                         );
                       },
@@ -990,7 +1095,7 @@ class HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  
+
                   // Device Setting Card
                   Expanded(
                     child: Container(
@@ -1063,7 +1168,7 @@ class Book {
     required this.title,
     required this.author,
     required this.totalPages,
-  })  : imageUrl = '',  // 空字符串表示使用默认灰色背景
+  })  : imageUrl = '', // 空字符串表示使用默认灰色背景
         progress = 0.0,
         readMinutes = 0,
         currentPage = 0;
@@ -1106,7 +1211,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // 修改搜索框
               Container(
                 height: 35, // 减小搜索框高度
@@ -1128,9 +1233,13 @@ class _LibraryPageState extends State<LibraryPage> {
                             } else {
                               isSearching = true;
                               filteredBooks = books
-                                  .where((book) => 
-                                      book.title.toLowerCase().contains(value.toLowerCase()) ||
-                                      book.author.toLowerCase().contains(value.toLowerCase()))
+                                  .where((book) =>
+                                      book.title
+                                          .toLowerCase()
+                                          .contains(value.toLowerCase()) ||
+                                      book.author
+                                          .toLowerCase()
+                                          .contains(value.toLowerCase()))
                                   .toList();
                             }
                           });
@@ -1148,7 +1257,8 @@ class _LibraryPageState extends State<LibraryPage> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                      icon: const Icon(Icons.search,
+                          color: Colors.grey, size: 20),
                       onPressed: () {
                         FocusScope.of(context).unfocus();
                       },
@@ -1159,7 +1269,8 @@ class _LibraryPageState extends State<LibraryPage> {
                       color: Colors.grey[300],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.filter_list, color: Colors.grey, size: 20),
+                      icon: const Icon(Icons.filter_list,
+                          color: Colors.grey, size: 20),
                       onPressed: () {
                         // 过滤功能
                       },
@@ -1168,7 +1279,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // 修改书籍网格部分
               Expanded(
                 child: GridView.builder(
@@ -1183,13 +1294,11 @@ class _LibraryPageState extends State<LibraryPage> {
                   itemBuilder: (context, index) {
                     return Transform.translate(
                       offset: Offset(0, index % 2 == 1 ? 30 : -20),
-                      child: index == 0 
+                      child: index == 0
                           ? _buildAddBookCard()
-                          : _buildBookCard(
-                              isSearching 
-                                  ? filteredBooks[index - 1] 
-                                  : books[index - 1]
-                            ),
+                          : _buildBookCard(isSearching
+                              ? filteredBooks[index - 1]
+                              : books[index - 1]),
                     );
                   },
                 ),
@@ -1242,10 +1351,10 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Widget _buildBookCard(Book book) {
     // 计算阅读进度百分比
-    double progressPercentage = book.totalPages > 0 
-        ? (book.currentPage / book.totalPages * 100).roundToDouble() 
+    double progressPercentage = book.totalPages > 0
+        ? (book.currentPage / book.totalPages * 100).roundToDouble()
         : 0.0;
-    
+
     return Container(
       margin: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
@@ -1268,7 +1377,7 @@ class _LibraryPageState extends State<LibraryPage> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
             child: book.imageUrl.isEmpty
                 ? Container(
-                    height: 180,
+                    height: 120,
                     width: double.infinity,
                     color: Colors.grey[200],
                     child: Center(
@@ -1276,7 +1385,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         book.title,
                         style: const TextStyle(
                           color: Colors.black87,
-                          fontSize: 18,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.center,
@@ -1287,7 +1396,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   )
                 : Image.asset(
                     book.imageUrl,
-                    height: 180,
+                    height: 120,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
@@ -1459,8 +1568,8 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     final pages = int.tryParse(pagesController.text) ?? 0;
-                    if (titleController.text.isNotEmpty && 
-                        authorController.text.isNotEmpty && 
+                    if (titleController.text.isNotEmpty &&
+                        authorController.text.isNotEmpty &&
                         pages > 0) {
                       final newBook = Book.create(
                         title: titleController.text,
@@ -1533,69 +1642,6 @@ class SettingPage extends StatelessWidget {
   }
 }
 
-class MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;
-  
-  final List<Widget> _pages = const [
-    HomePage(),
-    LibraryPage(),
-    GroupPage(),
-    SettingPage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey.shade300,
-              width: 1.0,
-            ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_filled),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_rounded),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: '',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          onTap: _onItemTapped,
-        ),
-      ),
-    );
-  }
-}
-
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -1653,8 +1699,8 @@ class _SignUpPageState extends State<SignUpPage> {
             Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: Colors.black,
-                ),
+                      primary: Colors.black,
+                    ),
                 textSelectionTheme: const TextSelectionThemeData(
                   cursorColor: Colors.black,
                   selectionColor: Colors.black12,
@@ -1693,7 +1739,11 @@ class _SignUpPageState extends State<SignUpPage> {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () async {
-                UserData.addUser(_emailController.text, _passwordController.text);
+                UserData.addUser(
+                  _emailController.text,
+                  _passwordController.text,
+                  _usernameController.text,
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('registered successfully'),
@@ -1733,27 +1783,34 @@ class _SignUpPageState extends State<SignUpPage> {
 
 // 在文件顶部添加用户数据存储类
 class UserData {
-  static final Map<String, String> _users = {}; // 存储用户邮箱和密码
+  static final Map<String, Map<String, String>> _users = {}; // 存储用户邮箱、密码和用户名
 
-  static void addUser(String email, String password) {
-    _users[email] = password;
+  static void addUser(String email, String password, String username) {
+    _users[email] = {
+      'password': password,
+      'username': username,
+    };
   }
 
   static bool verifyUser(String email, String password) {
     if (!_users.containsKey(email)) {
-      return false; // 用户不存在
+      return false;
     }
-    return _users[email] == password; // 验证密码
+    return _users[email]?['password'] == password;
   }
 
   static bool isEmailRegistered(String email) {
     return _users.containsKey(email);
   }
+
+  static String? getUsername(String email) {
+    return _users[email]?['username'];
+  }
 }
 
 class ConfettiWidget extends StatefulWidget {
   final VoidCallback onComplete;
-  
+
   const ConfettiWidget({
     Key? key,
     required this.onComplete,
@@ -1763,7 +1820,8 @@ class ConfettiWidget extends StatefulWidget {
   State<ConfettiWidget> createState() => _ConfettiWidgetState();
 }
 
-class _ConfettiWidgetState extends State<ConfettiWidget> with SingleTickerProviderStateMixin {
+class _ConfettiWidgetState extends State<ConfettiWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   List<Confetti> confetti = [];
   final Random random = Random();
@@ -1775,12 +1833,12 @@ class _ConfettiWidgetState extends State<ConfettiWidget> with SingleTickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
-    
+
     // 创建50个彩色碎片
     for (int i = 0; i < 50; i++) {
       confetti.add(Confetti(random));
     }
-    
+
     _controller.forward().then((_) => widget.onComplete());
   }
 
@@ -1843,41 +1901,39 @@ class ConfettiPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (var particle in confetti) {
-      final paint = Paint()
-        ..color = particle.color.withOpacity(1 - progress)
-        ..style = PaintingStyle.fill;
-      
-      double dx = particle.speed * progress * cos(particle.angle);
-      double dy = particle.speed * progress * sin(particle.angle) + 
-                  progress * progress * 30; // 减小重力效果
-      
+      final paint = Paint()..color = particle.color;
+
       canvas.save();
-      canvas.translate(particle.x + dx, particle.y + dy);
+      canvas.translate(
+        particle.x + particle.speed * progress * cos(particle.angle),
+        particle.y + particle.speed * progress * sin(particle.angle),
+      );
       canvas.rotate(particle.angle);
-      
-      // 绘制彩带
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset.zero,
-            width: particle.width * (1 - progress * 0.5),
-            height: particle.height,
-          ),
-          const Radius.circular(1),
+
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: particle.width,
+          height: particle.height,
         ),
         paint,
       );
-      
+
       canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(ConfettiPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 class RecentReadingPage extends StatefulWidget {
-  const RecentReadingPage({super.key});
+  final String username;
+
+  const RecentReadingPage({
+    super.key,
+    required this.username,
+  });
 
   @override
   State<RecentReadingPage> createState() => _RecentReadingPageState();
@@ -1889,18 +1945,434 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
   late DateTime weekStart;
   late DateTime weekEnd;
   List<double> chartData = [];
-  
+
   @override
   void initState() {
     super.initState();
     _updateWeekDates(selectedDate);
-    chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
+    _updateChartData();
   }
-  
+
   void _updateWeekDates(DateTime date) {
     // 获取所选日期所在周的周一和周日
     weekStart = date.subtract(Duration(days: date.weekday - 1));
     weekEnd = weekStart.add(const Duration(days: 6));
+  }
+
+  void _updateChartData() {
+    setState(() {
+      if (selectedPeriod == 'week') {
+        chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
+      } else if (selectedPeriod == 'month') {
+        chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
+      } else if (selectedPeriod == 'year') {
+        // 生成12个月的数据点
+        chartData =
+            List.generate(12, (index) => Random().nextInt(50).toDouble());
+      }
+    });
+  }
+
+  String _getDateDisplay() {
+    final List<String> months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+
+    if (selectedPeriod == 'week') {
+      return '${months[weekStart.month - 1]} ${weekStart.day} - ${months[weekEnd.month - 1]} ${weekEnd.day}, ${weekEnd.year}';
+    } else if (selectedPeriod == 'month') {
+      return '${months[selectedDate.month - 1]}, ${selectedDate.year}';
+    } else if (selectedPeriod == 'year') {
+      // 年视图只显示年份
+      return '${selectedDate.year}';
+    }
+    return '';
+  }
+
+  Future<void> _showCalendarDialog() async {
+    print('开始显示日历弹窗');
+    if (selectedPeriod == 'week') {
+      print('周视图日历选择');
+      DateTime tempSelectedDate = selectedDate;
+
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          print('构建弹窗');
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              print('构建 StatefulBuilder');
+              return Dialog(
+                child: Container(
+                  width: 300,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 400,
+                        child: CalendarDatePicker(
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                          onDateChanged: (date) {
+                            print('选择日期: $date');
+                            setDialogState(() {
+                              tempSelectedDate = date;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            print('点击 Submit 按钮');
+                            Navigator.of(context).pop();
+                            setState(() {
+                              selectedDate = tempSelectedDate;
+                              _updateWeekDates(tempSelectedDate);
+                              _updateChartData();
+                            });
+                            print('更新完成');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF4ED2C),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+      print('弹窗关闭');
+    } else if (selectedPeriod == 'month') {
+      // 月视图的日期选择
+      final List<String> months = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+      ];
+
+      int tempSelectedMonth = selectedDate.month;
+      int tempSelectedYear = selectedDate.year;
+
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setDialogState) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                backgroundColor: Colors.white,
+                contentPadding: const EdgeInsets.all(20),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${months[tempSelectedMonth - 1]} $tempSelectedYear',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // 月份和年份选择行
+                    Row(
+                      children: [
+                        // 月份选择列
+                        Expanded(
+                          child: Container(
+                            height: 240,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListWheelScrollView(
+                              itemExtent: 48,
+                              diameterRatio: 1.5,
+                              offAxisFraction: 0,
+                              useMagnifier: true,
+                              magnification: 1.2,
+                              physics: const FixedExtentScrollPhysics(),
+                              controller: FixedExtentScrollController(
+                                initialItem: tempSelectedMonth - 1,
+                              ),
+                              onSelectedItemChanged: (index) {
+                                setDialogState(() {
+                                  tempSelectedMonth = index + 1;
+                                });
+                              },
+                              children: List.generate(12, (index) {
+                                bool isSelected =
+                                    index + 1 == tempSelectedMonth;
+                                return Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(
+                                    child: Text(
+                                      months[index],
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? const Color(0xFF8E8EF3)
+                                            : Colors.black,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // 年份选择列
+                        Expanded(
+                          child: Container(
+                            height: 240,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListWheelScrollView(
+                              itemExtent: 48,
+                              diameterRatio: 1.5,
+                              offAxisFraction: 0,
+                              useMagnifier: true,
+                              magnification: 1.2,
+                              physics: const FixedExtentScrollPhysics(),
+                              controller: FixedExtentScrollController(
+                                initialItem: tempSelectedYear - 2020,
+                              ),
+                              onSelectedItemChanged: (index) {
+                                setDialogState(() {
+                                  tempSelectedYear = 2020 + index;
+                                });
+                              },
+                              children: List.generate(15, (index) {
+                                int year = 2020 + index;
+                                bool isSelected = year == tempSelectedYear;
+                                return Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(
+                                    child: Text(
+                                      year.toString(),
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? const Color(0xFF8E8EF3)
+                                            : Colors.black,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Submit按钮
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedDate =
+                                DateTime(tempSelectedYear, tempSelectedMonth);
+                            _updateChartData();
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF4ED2C),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } else if (selectedPeriod == 'year') {
+      // 年视图的年份选择
+      int tempSelectedYear = selectedDate.year;
+
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setDialogState) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                backgroundColor: Colors.white,
+                contentPadding: const EdgeInsets.all(20),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$tempSelectedYear',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // 年份选择列表
+                    Container(
+                      height: 240,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListWheelScrollView(
+                        itemExtent: 48,
+                        diameterRatio: 1.5,
+                        offAxisFraction: 0,
+                        useMagnifier: true,
+                        magnification: 1.2,
+                        physics: const FixedExtentScrollPhysics(),
+                        controller: FixedExtentScrollController(
+                          initialItem: tempSelectedYear - 2020,
+                        ),
+                        onSelectedItemChanged: (index) {
+                          setDialogState(() {
+                            tempSelectedYear = 2020 + index;
+                          });
+                        },
+                        children: List.generate(15, (index) {
+                          int year = 2020 + index;
+                          bool isSelected = year == tempSelectedYear;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: Text(
+                                year.toString(),
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? const Color(0xFF8E8EF3)
+                                      : Colors.black,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Submit按钮
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            selectedDate = DateTime(tempSelectedYear);
+                            _updateChartData();
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF4ED2C),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+  }
+
+  // 计算总阅读时间
+  double _calculateTotalReadingTime() {
+    if (selectedPeriod == 'week') {
+      return chartData.reduce((sum, time) => sum + time);
+    }
+    return 0;
   }
 
   @override
@@ -1938,7 +2410,7 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                   const Icon(Icons.calendar_today, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    '${weekStart.month}月${weekStart.day}日 - ${weekEnd.month}月${weekEnd.day}日, ${weekEnd.year}',
+                    _getDateDisplay(),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 14,
@@ -1957,9 +2429,60 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                 painter: ChartPainter(
                   data: chartData,
                   weekStart: weekStart,
+                  period: selectedPeriod,
                 ),
               ),
             ),
+
+            // 添加阅读时间总结文本（只在周视图显示）
+            if (selectedPeriod == 'week') ...[
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hi, ${widget.username}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text: "You've read ",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '${_calculateTotalReadingTime().toInt()}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const TextSpan(
+                            text: ' minutes this week!',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -1972,6 +2495,11 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
       onTap: () {
         setState(() {
           selectedPeriod = period;
+          // 切换到年视图时重置selectedDate为当前年份
+          if (period == 'year') {
+            selectedDate = DateTime.now();
+            _updateChartData();
+          }
         });
       },
       child: Container(
@@ -1993,83 +2521,39 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
       ),
     );
   }
-
-  Future<void> _showCalendarDialog() async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        DateTime tempSelectedDate = selectedDate;
-        return AlertDialog(
-          contentPadding: const EdgeInsets.all(16),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CalendarDatePicker(
-                initialDate: selectedDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2030),
-                onDateChanged: (date) {
-                  tempSelectedDate = date;
-                },
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      selectedDate = tempSelectedDate;
-                      _updateWeekDates(selectedDate);
-                      // 更新折线图数据
-                      _updateChartData();
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF4ED2C),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _updateChartData() {
-    // 这里可以根据选择的日期更新折线图数据
-    // 示例: 生成新的随机数据
-    setState(() {
-      chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
-    });
-  }
 }
 
 // 自定义折线图画笔
 class ChartPainter extends CustomPainter {
   final List<double> data;
-  final List<String> labels;
   final DateTime weekStart;
+  final String period;
 
   ChartPainter({
     required this.data,
     required this.weekStart,
-  }) : labels = List.generate(7, (index) {
-         final date = weekStart.add(Duration(days: index));
-         return '${date.month}/${date.day}';
-       });
+    required this.period,
+  });
+
+  List<String> _getLabels() {
+    if (period == 'week') {
+      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    } else if (period == 'month') {
+      return ['1', '5', '10', '15', '20', '25', '30'];
+    } else {
+      return List.generate(12, (index) => '${index + 1}');
+    }
+  }
+
+  List<int> _getYAxisValues() {
+    if (period == 'week') {
+      return [0, 15, 30, 45, 60, 75, 90, 105, 120]; // 周视图的刻度
+    } else if (period == 'month') {
+      return [0, 15, 30, 45, 60, 75, 90, 105, 120]; // 月视图的刻度
+    } else {
+      return [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]; // 年视图的刻度
+    }
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2087,26 +2571,72 @@ class ChartPainter extends CustomPainter {
       textAlign: TextAlign.center,
     );
 
+    // 修改坐标轴绘制
+    final axisPath = Path();
+
+    // 绘制y轴（延长并添加箭头）
+    axisPath
+      ..moveTo(40, size.height - 40)
+      ..lineTo(40, 10) // 延长到更上方
+      // 添加向上的箭头
+      ..lineTo(35, 15)
+      ..moveTo(40, 10)
+      ..lineTo(45, 15);
+
+    // 绘制x轴（延长并添加箭头）
+    axisPath
+      ..moveTo(40, size.height - 40)
+      ..lineTo(size.width - 10, size.height - 40) // 延长到更右方
+      // 添加向右的箭头
+      ..lineTo(size.width - 15, size.height - 45)
+      ..moveTo(size.width - 10, size.height - 40)
+      ..lineTo(size.width - 15, size.height - 35);
+
     // 绘制坐标轴
-    canvas.drawLine(
-      Offset(40, size.height - 40),
-      Offset(40, 20),
-      Paint()..color = Colors.grey,
+    canvas.drawPath(
+      axisPath,
+      Paint()
+        ..color = Colors.grey
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke,
     );
-    canvas.drawLine(
-      Offset(40, size.height - 40),
-      Offset(size.width - 20, size.height - 40),
-      Paint()..color = Colors.grey,
-    );
+
+    // 绘制y轴刻度
+    final yAxisValues = _getYAxisValues();
+    final yAxisStep = (size.height - 60) / (yAxisValues.length - 1);
+
+    for (int i = 0; i < yAxisValues.length; i++) {
+      // 绘制刻度线
+      canvas.drawLine(
+        Offset(35, size.height - 40 - i * yAxisStep),
+        Offset(45, size.height - 40 - i * yAxisStep),
+        Paint()..color = Colors.grey,
+      );
+
+      // 绘制刻度值
+      textPainter.text = TextSpan(
+        text: '${yAxisValues[i]}',
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(10, size.height - 40 - i * yAxisStep - textPainter.height / 2),
+      );
+    }
 
     // 绘制折线和数据点
-    final double xStep = (size.width - 60) / (data.length - 1);
-    final double yStep = (size.height - 60) / 6; // 6个刻度
+    final labels = _getLabels();
+    final double xStep = (size.width - 60) / (labels.length - 1);
+    final double maxYValue = period == 'year' ? 50 : 120;
+    final double yStep = (size.height - 60) / maxYValue;
 
     final path = Path();
-    for (int i = 0; i < data.length; i++) {
+    final int dataPoints = period == 'year' ? 12 : 7;
+
+    for (int i = 0; i < dataPoints; i++) {
       double x = 40 + i * xStep;
-      double y = size.height - 40 - (data[i] / 10) * yStep;
+      double y = size.height - 40 - (data[i] * yStep);
 
       if (i == 0) {
         path.moveTo(x, y);
@@ -2114,10 +2644,8 @@ class ChartPainter extends CustomPainter {
         path.lineTo(x, y);
       }
 
-      // 绘制数据点
       canvas.drawCircle(Offset(x, y), 4, pointPaint);
 
-      // 绘制x轴标签
       textPainter.text = TextSpan(
         text: labels[i],
         style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -2126,19 +2654,6 @@ class ChartPainter extends CustomPainter {
       textPainter.paint(
         canvas,
         Offset(x - textPainter.width / 2, size.height - 35),
-      );
-    }
-
-    // 绘制y轴刻度
-    for (int i = 0; i <= 6; i++) {
-      textPainter.text = TextSpan(
-        text: '${i * 10}',
-        style: const TextStyle(color: Colors.grey, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(5, size.height - 40 - i * yStep - textPainter.height / 2),
       );
     }
 
