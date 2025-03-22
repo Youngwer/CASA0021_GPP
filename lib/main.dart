@@ -1,4 +1,4 @@
-//周视图用户名传递
+//V28：新增Group页面、Group_Members列表排布（还不均匀）
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -1613,14 +1613,172 @@ class _LibraryPageState extends State<LibraryPage> {
 class GroupPage extends StatelessWidget {
   const GroupPage({super.key});
 
+  // 群组数据
+  final List<Map<String, dynamic>> groups = const [
+    {
+      'name': "CE Universe",
+      'memberCount': 8,
+    },
+    {
+      'name': 'Family',
+      'memberCount': 3,
+    },
+    {
+      'name': 'read partner',
+      'memberCount': 2,
+    },
+    {
+      'name': 'who is reading?',
+      'memberCount': 4,
+    },
+  ];
+
+  // CE Universe 群组的用户数据
+  final List<Map<String, dynamic>> ceUniverseUsers = const [
+    {
+      'name': 'Andy',
+      'photo': 'assets/images/Andy.png',
+    },
+    {
+      'name': 'Valerio',
+      'photo': 'assets/images/Valerio.png',
+    },
+    {
+      'name': 'Leah',
+      'photo': 'assets/images/Leah.png',
+    },
+    {
+      'name': 'Duncan',
+      'photo': 'assets/images/Duncan.png',
+    },
+    {
+      'name': 'Qijie',
+      'photo': 'assets/images/Qijie.png',
+    },
+    {
+      'name': 'Ke',
+      'photo': 'assets/images/Ke.png',
+    },
+    {
+      'name': 'Wenhao',
+      'photo': 'assets/images/Wenhao.png',
+    },
+    {
+      'name': 'Qijing',
+      'photo': 'assets/images/Qijing.png',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Group'),
-      ),
-      body: const Center(
-        child: Text('Group Page Content'),
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(25, 60, 25, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Group',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 350,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: groups.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      right: 16,
+                      left: index == 0 ? 0 : 0,
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GroupMembersPage(
+                              groupName: groups[index]['name'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 260,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD9D9D9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                groups[index]['name'],
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              // 修改用户头像显示
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: index == 0
+                                    ? ceUniverseUsers
+                                        .map((user) => Container(
+                                              width: 30,
+                                              height: 30,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  image:
+                                                      AssetImage(user['photo']),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ))
+                                        .toList()
+                                    : List.generate(
+                                        groups[index]['memberCount'],
+                                        (i) => Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(height: 33), // 增加间距使 logo 向下移动
+                              Center(
+                                child: Image.asset(
+                                  'assets/images/GroupLogo.png',
+                                  width: 140,
+                                  height: 140,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1900,27 +2058,115 @@ class ConfettiPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var particle in confetti) {
-      final paint = Paint()..color = particle.color;
+    final paint = Paint()
+      ..color = const Color(0xFFF4ED2C)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
 
-      canvas.save();
-      canvas.translate(
-        particle.x + particle.speed * progress * cos(particle.angle),
-        particle.y + particle.speed * progress * sin(particle.angle),
+    final pointPaint = Paint()
+      ..color = const Color(0xFFF4ED2C)
+      ..style = PaintingStyle.fill;
+
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+
+    // 修改坐标轴绘制
+    final axisPath = Path();
+
+    // 绘制y轴（延长并添加箭头）
+    axisPath
+      ..moveTo(40, size.height - 40)
+      ..lineTo(40, 10) // 延长到更上方
+      // 添加向上的箭头
+      ..lineTo(35, 15)
+      ..moveTo(40, 10)
+      ..lineTo(45, 15);
+
+    // 绘制x轴（延长并添加箭头）
+    axisPath
+      ..moveTo(40, size.height - 40)
+      ..lineTo(size.width - 10, size.height - 40) // 保持x轴的长度
+      ..lineTo(size.width - 15, size.height - 45)
+      ..moveTo(size.width - 10, size.height - 40)
+      ..lineTo(size.width - 15, size.height - 35);
+
+    // 绘制坐标轴
+    canvas.drawPath(
+      axisPath,
+      Paint()
+        ..color = Colors.grey
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke,
+    );
+
+    // 绘制y轴刻度
+    final yAxisValues = [0, 15, 30, 45, 60, 75, 90, 105, 120];
+    final yAxisStep = (size.height - 60) / (yAxisValues.length - 1);
+
+    for (int i = 0; i < yAxisValues.length; i++) {
+      // 绘制刻度线
+      canvas.drawLine(
+        Offset(35, size.height - 40 - i * yAxisStep),
+        Offset(45, size.height - 40 - i * yAxisStep),
+        Paint()..color = Colors.grey,
       );
-      canvas.rotate(particle.angle);
 
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset.zero,
-          width: particle.width,
-          height: particle.height,
-        ),
-        paint,
+      // 绘制刻度值
+      textPainter.text = TextSpan(
+        text: '${yAxisValues[i]}',
+        style: const TextStyle(color: Colors.grey, fontSize: 12),
       );
-
-      canvas.restore();
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(10, size.height - 40 - i * yAxisStep - textPainter.height / 2),
+      );
     }
+
+    // 绘制折线和数据点
+    final path = Path();
+    bool isFirstValidPoint = true;
+    final now = DateTime.now();
+
+    for (int i = 0; i < 7; i++) {
+      // 明确使用 7 而不是 data.length
+      final currentDate = DateTime.now().subtract(Duration(days: i));
+      final double x = 40 + i * 60.0;
+      final double y = size.height - 40 - (confetti[i].speed * progress * 2.0);
+
+      // 只绘制到今天的数据点
+      if (!currentDate.isAfter(now)) {
+        if (isFirstValidPoint) {
+          path.moveTo(x, y);
+          isFirstValidPoint = false;
+        } else {
+          path.lineTo(x, y);
+        }
+
+        // 绘制数据点
+        canvas.drawCircle(Offset(x, y), 4, pointPaint);
+      }
+
+      // 总是绘制所有七个星期标签
+      textPainter.text = TextSpan(
+        text: '${currentDate.day}',
+        style: TextStyle(
+          color: currentDate.isAfter(now)
+              ? Colors.grey.withOpacity(0.5)
+              : Colors.grey,
+          fontSize: 12,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(x - textPainter.width / 2, size.height - 35),
+      );
+    }
+
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -1962,13 +2208,54 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
   void _updateChartData() {
     setState(() {
       if (selectedPeriod == 'week') {
-        chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
+        // 保持周视图代码不变
+        final now = DateTime.now();
+        chartData = List.generate(7, (index) {
+          final currentDate = weekStart.add(Duration(days: index));
+          if (currentDate.isAfter(now)) {
+            return 0.0;
+          }
+          return Random().nextInt(50) + 10.0;
+        });
       } else if (selectedPeriod == 'month') {
-        chartData = List.generate(7, (index) => Random().nextInt(50) + 10);
-      } else if (selectedPeriod == 'year') {
-        // 生成12个月的数据点
-        chartData =
-            List.generate(12, (index) => Random().nextInt(50).toDouble());
+        // 保持月视图代码不变
+        final now = DateTime.now();
+        final selectedMonthDate =
+            DateTime(selectedDate.year, selectedDate.month, 1);
+        final currentMonthDate = DateTime(now.year, now.month, 1);
+
+        chartData = List.generate(7, (index) {
+          final day =
+              int.parse(['1', '5', '10', '15', '20', '25', '30'][index]);
+          final currentDate =
+              DateTime(selectedDate.year, selectedDate.month, day);
+
+          if (selectedMonthDate.isAfter(currentMonthDate)) {
+            return 0.0;
+          }
+
+          if (selectedMonthDate.year == now.year &&
+              selectedMonthDate.month == now.month &&
+              currentDate.isAfter(now)) {
+            return 0.0;
+          }
+
+          return Random().nextInt(50) + 10.0;
+        });
+      } else {
+        // 年视图：根据月份生成数据
+        final now = DateTime.now();
+        chartData = List.generate(12, (index) {
+          final currentDate = DateTime(selectedDate.year, index + 1, 1);
+
+          // 如果是未来年份或当前年份的未来月份，返回0
+          if (selectedDate.year > now.year ||
+              (selectedDate.year == now.year && index + 1 > now.month)) {
+            return 0.0;
+          }
+
+          return Random().nextInt(50).toDouble();
+        });
       }
     });
   }
@@ -2370,7 +2657,26 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
   // 计算总阅读时间
   double _calculateTotalReadingTime() {
     if (selectedPeriod == 'week') {
-      return chartData.reduce((sum, time) => sum + time);
+      // 保持周视图的计算逻辑不变
+      double total = 0;
+      for (int i = 0; i < chartData.length; i++) {
+        total += chartData[i];
+      }
+      return total;
+    } else if (selectedPeriod == 'month') {
+      // 保持月视图的计算逻辑不变
+      double total = 0;
+      for (int i = 0; i < chartData.length; i++) {
+        total += chartData[i];
+      }
+      return total;
+    } else if (selectedPeriod == 'year') {
+      // 年视图：计算所有月份数据的总和
+      double total = 0;
+      for (int i = 0; i < chartData.length; i++) {
+        total += chartData[i];
+      }
+      return total;
     }
     return 0;
   }
@@ -2434,11 +2740,13 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
               ),
             ),
 
-            // 添加阅读时间总结文本（只在周视图显示）
-            if (selectedPeriod == 'week') ...[
+            // 添加阅读时间总结文本
+            if (selectedPeriod == 'week' ||
+                selectedPeriod == 'month' ||
+                selectedPeriod == 'year') ...[
               const SizedBox(height: 20),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2469,9 +2777,13 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const TextSpan(
-                            text: ' minutes this week!',
-                            style: TextStyle(
+                          TextSpan(
+                            text: selectedPeriod == 'week'
+                                ? ' minutes this week!'
+                                : selectedPeriod == 'month'
+                                    ? ' minutes this month!'
+                                    : ' minutes this year!',
+                            style: const TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
                             ),
@@ -2535,26 +2847,6 @@ class ChartPainter extends CustomPainter {
     required this.period,
   });
 
-  List<String> _getLabels() {
-    if (period == 'week') {
-      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    } else if (period == 'month') {
-      return ['1', '5', '10', '15', '20', '25', '30'];
-    } else {
-      return List.generate(12, (index) => '${index + 1}');
-    }
-  }
-
-  List<int> _getYAxisValues() {
-    if (period == 'week') {
-      return [0, 15, 30, 45, 60, 75, 90, 105, 120]; // 周视图的刻度
-    } else if (period == 'month') {
-      return [0, 15, 30, 45, 60, 75, 90, 105, 120]; // 月视图的刻度
-    } else {
-      return [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]; // 年视图的刻度
-    }
-  }
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -2571,14 +2863,142 @@ class ChartPainter extends CustomPainter {
       textAlign: TextAlign.center,
     );
 
-    // 修改坐标轴绘制
+    // 根据不同视图类型绘制坐标轴
+    if (period == 'week') {
+      // 周视图：只显示到今天的数据
+      final now = DateTime.now();
+      final path = Path();
+      bool isFirstValidPoint = true;
+
+      for (int i = 0; i < 7; i++) {
+        final currentDate = weekStart.add(Duration(days: i));
+        final double x = 40 + i * 45.0;
+        final double y = size.height - 40 - (data[i] / 10) * 2.0;
+
+        if (!currentDate.isAfter(now)) {
+          if (isFirstValidPoint) {
+            path.moveTo(x, y);
+            isFirstValidPoint = false;
+          } else {
+            path.lineTo(x, y);
+          }
+          canvas.drawCircle(Offset(x, y), 4, pointPaint);
+        }
+
+        textPainter.text = TextSpan(
+          text: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+          style: TextStyle(
+            color: currentDate.isAfter(now)
+                ? Colors.grey.withOpacity(0.5)
+                : Colors.grey,
+            fontSize: 12,
+          ),
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(x - textPainter.width / 2, size.height - 35),
+        );
+      }
+      canvas.drawPath(path, paint);
+    } else if (period == 'month') {
+      final now = DateTime.now();
+      final labels = ['1', '5', '10', '15', '20', '25', '30'];
+
+      final double xStep = (size.width - 60) / (labels.length - 1);
+      final double maxYValue = 120.0;
+      final double yStep = (size.height - 60) / maxYValue;
+
+      final path = Path();
+      bool isFirstValidPoint = true;
+
+      for (int i = 0; i < labels.length; i++) {
+        final double x = 40 + i * xStep;
+        final double y = size.height - 40 - (data[i] * yStep);
+
+        if (data[i] > 0) {
+          // 只绘制有数据的点
+          if (isFirstValidPoint) {
+            path.moveTo(x, y);
+            isFirstValidPoint = false;
+          } else {
+            path.lineTo(x, y);
+          }
+          canvas.drawCircle(Offset(x, y), 4, pointPaint);
+        }
+
+        textPainter.text = TextSpan(
+          text: labels[i],
+          style: TextStyle(
+            color: data[i] > 0 ? Colors.grey : Colors.grey.withOpacity(0.5),
+            fontSize: 12,
+          ),
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(x - textPainter.width / 2, size.height - 35),
+        );
+      }
+
+      if (!isFirstValidPoint) {
+        canvas.drawPath(path, paint);
+      }
+    } else {
+      // 年视图：只显示到当前月份的数据点
+      final labels = List.generate(12, (index) => '${index + 1}');
+
+      final double xStep = (size.width - 60) / (labels.length - 1);
+      final double maxYValue = 50;
+      final double yStep = (size.height - 60) / maxYValue;
+
+      final path = Path();
+      bool isFirstValidPoint = true;
+
+      for (int i = 0; i < 12; i++) {
+        double x = 40 + i * xStep;
+        double y = size.height - 40 - (data[i] * yStep);
+
+        if (data[i] > 0) {
+          if (isFirstValidPoint) {
+            path.moveTo(x, y);
+            isFirstValidPoint = false;
+          } else {
+            path.lineTo(x, y);
+          }
+          canvas.drawCircle(Offset(x, y), 4, pointPaint);
+        }
+
+        textPainter.text = TextSpan(
+          text: labels[i],
+          style: TextStyle(
+            color: data[i] > 0 ? Colors.grey : Colors.grey.withOpacity(0.5),
+            fontSize: 12,
+          ),
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(x - textPainter.width / 2, size.height - 35),
+        );
+      }
+
+      if (!isFirstValidPoint) {
+        canvas.drawPath(path, paint);
+      }
+    }
+
+    // 绘制坐标轴和刻度
+    _drawAxes(canvas, size);
+  }
+
+  void _drawAxes(Canvas canvas, Size size) {
     final axisPath = Path();
 
     // 绘制y轴（延长并添加箭头）
     axisPath
       ..moveTo(40, size.height - 40)
-      ..lineTo(40, 10) // 延长到更上方
-      // 添加向上的箭头
+      ..lineTo(40, 10)
       ..lineTo(35, 15)
       ..moveTo(40, 10)
       ..lineTo(45, 15);
@@ -2586,13 +3006,11 @@ class ChartPainter extends CustomPainter {
     // 绘制x轴（延长并添加箭头）
     axisPath
       ..moveTo(40, size.height - 40)
-      ..lineTo(size.width - 10, size.height - 40) // 延长到更右方
-      // 添加向右的箭头
+      ..lineTo(size.width - 10, size.height - 40)
       ..lineTo(size.width - 15, size.height - 45)
       ..moveTo(size.width - 10, size.height - 40)
       ..lineTo(size.width - 15, size.height - 35);
 
-    // 绘制坐标轴
     canvas.drawPath(
       axisPath,
       Paint()
@@ -2602,21 +3020,25 @@ class ChartPainter extends CustomPainter {
     );
 
     // 绘制y轴刻度
-    final yAxisValues = _getYAxisValues();
+    final yAxisValues = period == 'year'
+        ? [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+        : [0, 15, 30, 45, 60, 75, 90, 105, 120];
+
     final yAxisStep = (size.height - 60) / (yAxisValues.length - 1);
 
     for (int i = 0; i < yAxisValues.length; i++) {
-      // 绘制刻度线
       canvas.drawLine(
         Offset(35, size.height - 40 - i * yAxisStep),
         Offset(45, size.height - 40 - i * yAxisStep),
         Paint()..color = Colors.grey,
       );
 
-      // 绘制刻度值
-      textPainter.text = TextSpan(
-        text: '${yAxisValues[i]}',
-        style: const TextStyle(color: Colors.grey, fontSize: 12),
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${yAxisValues[i]}',
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+        textDirection: TextDirection.ltr,
       );
       textPainter.layout();
       textPainter.paint(
@@ -2624,42 +3046,377 @@ class ChartPainter extends CustomPainter {
         Offset(10, size.height - 40 - i * yAxisStep - textPainter.height / 2),
       );
     }
-
-    // 绘制折线和数据点
-    final labels = _getLabels();
-    final double xStep = (size.width - 60) / (labels.length - 1);
-    final double maxYValue = period == 'year' ? 50 : 120;
-    final double yStep = (size.height - 60) / maxYValue;
-
-    final path = Path();
-    final int dataPoints = period == 'year' ? 12 : 7;
-
-    for (int i = 0; i < dataPoints; i++) {
-      double x = 40 + i * xStep;
-      double y = size.height - 40 - (data[i] * yStep);
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-
-      canvas.drawCircle(Offset(x, y), 4, pointPaint);
-
-      textPainter.text = TextSpan(
-        text: labels[i],
-        style: const TextStyle(color: Colors.grey, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(x - textPainter.width / 2, size.height - 35),
-      );
-    }
-
-    canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// 添加 Group_Members 页面
+class GroupMembersPage extends StatefulWidget {
+  final String groupName;
+
+  const GroupMembersPage({
+    super.key,
+    required this.groupName,
+  });
+
+  @override
+  State<GroupMembersPage> createState() => _GroupMembersPageState();
+}
+
+class _GroupMembersPageState extends State<GroupMembersPage> {
+  String selectedTab = 'Members';
+
+  // 修改群组数据
+  final List<Map<String, dynamic>> readingUsers = [
+    {
+      'name': 'Wenhao',
+      'photo': 'assets/images/Wenhao.png',
+    },
+    {
+      'name': 'Qijing',
+      'photo': 'assets/images/Qijing.png',
+    },
+  ];
+
+  final List<Map<String, dynamic>> notReadingUsers = [
+    {
+      'name': 'Andy',
+      'photo': 'assets/images/Andy.png',
+    },
+    {
+      'name': 'Valerio',
+      'photo': 'assets/images/Valerio.png',
+    },
+    {
+      'name': 'Leah',
+      'photo': 'assets/images/Leah.png',
+    },
+    {
+      'name': 'Duncan',
+      'photo': 'assets/images/Duncan.png',
+    },
+    {
+      'name': 'Qijie',
+      'photo': 'assets/images/Qijie.png',
+    },
+    {
+      'name': 'Ke',
+      'photo': 'assets/images/Ke.png',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    // 创建按指定顺序排列的用户列表
+    final orderedUsers = [
+      notReadingUsers.firstWhere((user) => user['name'] == 'Andy'),
+      notReadingUsers.firstWhere((user) => user['name'] == 'Valerio'),
+      notReadingUsers.firstWhere((user) => user['name'] == 'Leah'),
+      notReadingUsers.firstWhere((user) => user['name'] == 'Duncan'),
+      notReadingUsers.firstWhere((user) => user['name'] == 'Qijie'),
+      notReadingUsers.firstWhere((user) => user['name'] == 'Ke'),
+      readingUsers.firstWhere((user) => user['name'] == 'Wenhao'),
+      readingUsers.firstWhere((user) => user['name'] == 'Qijing'),
+    ];
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(25, 45, 25, 16),
+        child: SingleChildScrollView(
+          // 添加滚动功能
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题栏
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.groupName,
+                    style: const TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // 导航栏
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTabButton('Members'),
+                  const SizedBox(width: 20),
+                  _buildTabButton('Rank'),
+                  const SizedBox(width: 20),
+                  _buildTabButton('Books'),
+                ],
+              ),
+              const SizedBox(height: 30),
+              // Members 内容
+              if (selectedTab == 'Members')
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 左侧：reading 部分
+                        SizedBox(
+                          width: 100,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '2',
+                                style: TextStyle(
+                                  fontSize: 50,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFF4ED2C),
+                                ),
+                              ),
+                              Center(
+                                widthFactor: 1.5, // 减小宽度使文本向左移动
+                                child: Text(
+                                  'reading                             total',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[700],
+                                  ),
+                                  softWrap: false,
+                                  overflow: TextOverflow.visible,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // 中间：分隔符
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(top: 0), // 将 top 从 5 改为 0
+                          child: Text(
+                            '/',
+                            style: TextStyle(
+                              fontSize: 45,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        // 右侧：total 部分
+                        SizedBox(
+                          width: 100,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 15),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '8',
+                                      style: TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                    // 按行构建用户列表
+                    Column(
+                      children: [
+                        for (int i = 0; i < orderedUsers.length; i += 2) ...[
+                          Transform.translate(
+                            offset: i == 0
+                                ? Offset.zero
+                                : const Offset(0, -80), // 从第二组开始，向上移动以缩短间距
+                            child: Column(
+                              children: [
+                                // Logo 行
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'assets/images/GroupLogo3.png',
+                                      width: 160,
+                                      height: 112,
+                                      fit: BoxFit.contain,
+                                    ),
+                                    const SizedBox(width: 20),
+                                    Image.asset(
+                                      'assets/images/GroupLogo3.png',
+                                      width: 160,
+                                      height: 225,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 0),
+                                // 用户信息行
+                                Transform.translate(
+                                  offset: const Offset(0, -50), // 保持与图片的距离不变
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // 左侧用户
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 35,
+                                            height: 35,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              image: DecorationImage(
+                                                image: AssetImage(
+                                                    orderedUsers[i]['photo']),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            orderedUsers[i]['name'],
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 110),
+                                      // 右侧用户
+                                      if (i + 1 < orderedUsers.length)
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 35,
+                                              height: 35,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  image: AssetImage(
+                                                      orderedUsers[i + 1]
+                                                          ['photo']),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              orderedUsers[i + 1]['name'],
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 10), // 缩短每组之间的间距为原来的一半
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String text) {
+    final isSelected = selectedTab == text;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedTab = text;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFD9D9D9) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 21, // 增大字体大小
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 修改用户卡片构建方法
+  Widget _buildUserCard(Map<String, dynamic> user, bool isReading) {
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 70) / 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/images/GroupLogo3.png',
+            width: 160,
+            height: 200, // 将高度增加到原来的5倍（45 * 5 = 225）
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 35,
+                height: 35,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: AssetImage(user['photo']),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                user['name'],
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
