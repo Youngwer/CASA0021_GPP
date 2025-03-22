@@ -1,4 +1,4 @@
-//V33：Group_Members页面完善了，终于
+//V36：Group_Rank的页面做好了
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -2982,65 +2982,57 @@ class GroupMembersPage extends StatefulWidget {
 class _GroupMembersPageState extends State<GroupMembersPage> {
   String selectedTab = 'Members';
 
-  // 修改群组数据
-  final List<Map<String, dynamic>> readingUsers = [
-    {
-      'name': 'Wenhao',
-      'photo': 'assets/images/Wenhao.png',
-    },
+  // 修改群组数据，添加 readingTime 字段
+  final List<Map<String, dynamic>> orderedUsers = [
     {
       'name': 'Qijing',
       'photo': 'assets/images/Qijing.png',
-    },
-  ];
-
-  final List<Map<String, dynamic>> notReadingUsers = [
-    {
-      'name': 'Andy',
-      'photo': 'assets/images/Andy.png',
+      'readingTime': 29,
     },
     {
       'name': 'Valerio',
       'photo': 'assets/images/Valerio.png',
+      'readingTime': 28,
+    },
+    {
+      'name': 'Wenhao',
+      'photo': 'assets/images/Wenhao.png',
+      'readingTime': 27,
     },
     {
       'name': 'Leah',
       'photo': 'assets/images/Leah.png',
+      'readingTime': 26,
     },
     {
-      'name': 'Duncan',
-      'photo': 'assets/images/Duncan.png',
+      'name': 'Andy',
+      'photo': 'assets/images/Andy.png',
+      'readingTime': 25,
     },
     {
       'name': 'Qijie',
       'photo': 'assets/images/Qijie.png',
+      'readingTime': 23,
+    },
+    {
+      'name': 'Duncan',
+      'photo': 'assets/images/Duncan.png',
+      'readingTime': 22,
     },
     {
       'name': 'Ke',
       'photo': 'assets/images/Ke.png',
+      'readingTime': 8,
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    // 创建按指定顺序排列的用户列表
-    final orderedUsers = [
-      notReadingUsers.firstWhere((user) => user['name'] == 'Andy'),
-      notReadingUsers.firstWhere((user) => user['name'] == 'Valerio'),
-      notReadingUsers.firstWhere((user) => user['name'] == 'Leah'),
-      notReadingUsers.firstWhere((user) => user['name'] == 'Duncan'),
-      notReadingUsers.firstWhere((user) => user['name'] == 'Qijie'),
-      notReadingUsers.firstWhere((user) => user['name'] == 'Ke'),
-      readingUsers.firstWhere((user) => user['name'] == 'Wenhao'),
-      readingUsers.firstWhere((user) => user['name'] == 'Qijing'),
-    ];
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.fromLTRB(25, 45, 25, 16),
         child: SingleChildScrollView(
-          // 添加滚动功能
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3078,8 +3070,8 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                 ],
               ),
               const SizedBox(height: 30),
-              // Members 内容
-              if (selectedTab == 'Members')
+              // Members 和 Rank 的条件渲染
+              if (selectedTab == 'Members') ...[
                 Column(
                   children: [
                     Container(
@@ -3260,6 +3252,130 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                     ),
                   ],
                 ),
+              ] else if (selectedTab == 'Rank') ...[
+                Transform.translate(
+                  offset: const Offset(0, -35),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 5),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: orderedUsers.length,
+                        itemBuilder: (context, index) {
+                          final user = orderedUsers[index];
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 8),
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                // 为第一名添加黄色发光效果
+                                if (index == 0) ...[
+                                  BoxShadow(
+                                    color: const Color(0xFFF4ED2C)
+                                        .withOpacity(0.3),
+                                    spreadRadius: 4,
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFF4ED2C)
+                                        .withOpacity(0.2),
+                                    spreadRadius: 6,
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                ],
+                                // 为最后一名添加红色发光效果
+                                if (index == orderedUsers.length - 1) ...[
+                                  BoxShadow(
+                                    color: const Color(0xFFF44336)
+                                        .withOpacity(0.3),
+                                    spreadRadius: 4,
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFF44336)
+                                        .withOpacity(0.2),
+                                    spreadRadius: 6,
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                ],
+                                // 保持原有的阴影效果
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 2,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // 排名数字
+                                Container(
+                                  width: 30,
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                // 用户头像
+                                Container(
+                                  width: 45,
+                                  height: 45,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: AssetImage(user['photo']),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                // 用户名和阅读时长
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user['name'],
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${user['readingTime']} hours',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
