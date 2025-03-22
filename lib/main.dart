@@ -1,4 +1,4 @@
-//V36：Group_Rank的页面做好了
+//V37：Group_Books页面 上半部分做好了，下半部分死活写不出来...先搁置一下吧
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -3374,6 +3374,146 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                       ),
                     ],
                   ),
+                ),
+              ] else if (selectedTab == 'Books') ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    // "The most popular book of this month" 标题
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'The most popular book of this month',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    // 热门书籍卡片
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Row(
+                            children: [
+                              // 书籍封面
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  'assets/images/book2_AI.jpg', // 更改图片路径
+                                  width: 100,
+                                  height: 150, // 将原来的 150 改为 145
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              // 书籍信息
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'AI at the Edge', // 更改书名
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Kai-Fu Lee', // 更改作者名
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    // 阅读人数信息
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people_outline,
+                                          size: 20,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          '4: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        // 读者头像
+                                        for (var i = 0; i < 4; i++)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 5),
+                                            child: Container(
+                                              width: 25,
+                                              height: 25,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  image: AssetImage(
+                                                    i == 0
+                                                        ? 'assets/images/Andy.png'
+                                                        : i == 1
+                                                            ? 'assets/images/Valerio.png'
+                                                            : i == 2
+                                                                ? 'assets/images/Leah.png'
+                                                                : 'assets/images/Duncan.png',
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    // "Other books" 标题
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Other books',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    // 这里可以添加其他书籍的列表
+                  ],
                 ),
               ],
             ],
