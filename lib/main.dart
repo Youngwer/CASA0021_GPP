@@ -1,4 +1,4 @@
-//V30：Group_Members页面的"2/8"正常
+//V33：Group_Members页面完善了，终于
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -3091,12 +3091,13 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                           RichText(
                             text: TextSpan(
                               children: [
-                                const TextSpan(
+                                TextSpan(
                                   text: '2',
                                   style: TextStyle(
                                     fontSize: 50,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFFF4ED2C),
+                                    color: const Color(
+                                        0xFFF44336), // 将原来的 0xFFF4ED2C 改为 0xFFF44336
                                   ),
                                 ),
                                 TextSpan(
@@ -3137,100 +3138,124 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                     // 按行构建用户列表
                     Column(
                       children: [
-                        for (int i = 0; i < orderedUsers.length; i += 2) ...[
-                          Transform.translate(
-                            offset: i == 0
-                                ? Offset.zero
-                                : const Offset(0, -120), // 将 -80 改为 -120
-                            child: Column(
-                              children: [
-                                // Logo 行
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'assets/images/GroupLogo3.png',
-                                      width: 160,
-                                      height: 112,
-                                      fit: BoxFit.contain,
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Image.asset(
-                                      'assets/images/GroupLogo3.png',
-                                      width: 160,
-                                      height: 225,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 0),
-                                // 用户信息行
+                        Transform.translate(
+                          offset: const Offset(0, -30), // 整体向上移动10个单位
+                          child: Column(
+                            children: [
+                              for (int i = 0;
+                                  i < orderedUsers.length;
+                                  i += 2) ...[
                                 Transform.translate(
-                                  offset: const Offset(0, -50),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  offset: i == 0
+                                      ? Offset.zero
+                                      : (i == 2
+                                          ? const Offset(0, -120) // 第二行偏移保持不变
+                                          : (i == 4
+                                              ? const Offset(
+                                                  0, -240) // 第三行偏移保持不变
+                                              : const Offset(
+                                                  0, -360) // 第四行偏移保持不变
+                                          )),
+                                  child: Column(
                                     children: [
-                                      // 左侧用户
+                                      // Logo 行
                                       Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Container(
-                                            width: 35,
-                                            height: 35,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              image: DecorationImage(
-                                                image: AssetImage(
-                                                    orderedUsers[i]['photo']),
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
+                                          Image.asset(
+                                            i == 0
+                                                ? 'assets/images/GroupLogo3.png' // 第一行使用 GroupLogo3
+                                                : 'assets/images/GroupLogo2.png', // 其他行使用 GroupLogo2
+                                            width: 160,
+                                            height: 112,
+                                            fit: BoxFit.contain,
                                           ),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            orderedUsers[i]['name'],
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              color: Colors.black,
-                                            ),
+                                          const SizedBox(width: 20),
+                                          Image.asset(
+                                            i == 0
+                                                ? 'assets/images/GroupLogo3.png' // 第一行使用 GroupLogo3
+                                                : 'assets/images/GroupLogo2.png', // 其他行使用 GroupLogo2
+                                            width: 160,
+                                            height: 225,
+                                            fit: BoxFit.contain,
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(width: 110),
-                                      // 右侧用户
-                                      if (i + 1 < orderedUsers.length)
-                                        Row(
+                                      const SizedBox(height: 0),
+                                      // 用户信息行
+                                      Transform.translate(
+                                        offset: const Offset(0, -50),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            Container(
-                                              width: 35,
-                                              height: 35,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                  image: AssetImage(
-                                                      orderedUsers[i + 1]
-                                                          ['photo']),
-                                                  fit: BoxFit.cover,
+                                            // 左侧用户
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  width: 35,
+                                                  height: 35,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    image: DecorationImage(
+                                                      image: AssetImage(
+                                                          orderedUsers[i]
+                                                              ['photo']),
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  orderedUsers[i]['name'],
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(width: 10),
-                                            Text(
-                                              orderedUsers[i + 1]['name'],
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.black,
+                                            const SizedBox(width: 110),
+                                            // 右侧用户
+                                            if (i + 1 < orderedUsers.length)
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    width: 35,
+                                                    height: 35,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      image: DecorationImage(
+                                                        image: AssetImage(
+                                                            orderedUsers[i + 1]
+                                                                ['photo']),
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  Text(
+                                                    orderedUsers[i + 1]['name'],
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ),
                                           ],
                                         ),
+                                      ),
+                                      const SizedBox(
+                                          height: 5), // 将 height 从 10 改为 5
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 5), // 将 height 从 10 改为 5
                               ],
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ],
