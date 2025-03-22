@@ -1,4 +1,4 @@
-//V28：新增Group页面、Group_Members列表排布（还不均匀）
+//V29：新增Group页面、Group_Members列表排布（还不均匀），恢复烟花特效
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -603,28 +603,12 @@ class HomePageState extends State<HomePage> {
                     width: double.infinity,
                     height: 45,
                     child: ElevatedButton(
-                      onPressed: () async {
+                      onPressed: () {
                         if (!noSpecificPage) {
                           int? pages = int.tryParse(pageController.text);
-                          if (pages != null) {
-                            if (_selectedBook != null) {
-                              _selectedBook!.currentPage = pages;
-                              Navigator.of(context).pop(true);
-                              await showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return ConfettiWidget(
-                                    onComplete: () {
-                                      Navigator.of(context).pop();
-                                      setState(() {
-                                        _isReading = false;
-                                      });
-                                    },
-                                  );
-                                },
-                              );
-                            }
+                          if (pages != null && _selectedBook != null) {
+                            _selectedBook!.currentPage = pages;
+                            Navigator.of(context).pop(true);
                           }
                         } else {
                           Navigator.of(context).pop(true);
@@ -655,10 +639,22 @@ class HomePageState extends State<HomePage> {
     );
 
     if (result == true) {
-      setState(() {
-        _isReading = false;
-        _selectedBook = null;
-      });
+      // 显示彩带特效
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return ConfettiWidget(
+            onComplete: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _isReading = false;
+                _selectedBook = null;
+              });
+            },
+          );
+        },
+      );
     }
   }
 
@@ -2058,119 +2054,37 @@ class ConfettiPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFF4ED2C)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+    for (var particle in confetti) {
+      final paint = Paint()
+        ..color = particle.color.withOpacity(1 - progress)
+        ..style = PaintingStyle.fill;
 
-    final pointPaint = Paint()
-      ..color = const Color(0xFFF4ED2C)
-      ..style = PaintingStyle.fill;
+      double dx = particle.speed * progress * cos(particle.angle);
+      double dy = particle.speed * progress * sin(particle.angle) +
+          progress * progress * 30;
 
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    );
+      canvas.save();
+      canvas.translate(particle.x + dx, particle.y + dy);
+      canvas.rotate(particle.angle);
 
-    // 修改坐标轴绘制
-    final axisPath = Path();
-
-    // 绘制y轴（延长并添加箭头）
-    axisPath
-      ..moveTo(40, size.height - 40)
-      ..lineTo(40, 10) // 延长到更上方
-      // 添加向上的箭头
-      ..lineTo(35, 15)
-      ..moveTo(40, 10)
-      ..lineTo(45, 15);
-
-    // 绘制x轴（延长并添加箭头）
-    axisPath
-      ..moveTo(40, size.height - 40)
-      ..lineTo(size.width - 10, size.height - 40) // 保持x轴的长度
-      ..lineTo(size.width - 15, size.height - 45)
-      ..moveTo(size.width - 10, size.height - 40)
-      ..lineTo(size.width - 15, size.height - 35);
-
-    // 绘制坐标轴
-    canvas.drawPath(
-      axisPath,
-      Paint()
-        ..color = Colors.grey
-        ..strokeWidth = 1
-        ..style = PaintingStyle.stroke,
-    );
-
-    // 绘制y轴刻度
-    final yAxisValues = [0, 15, 30, 45, 60, 75, 90, 105, 120];
-    final yAxisStep = (size.height - 60) / (yAxisValues.length - 1);
-
-    for (int i = 0; i < yAxisValues.length; i++) {
-      // 绘制刻度线
-      canvas.drawLine(
-        Offset(35, size.height - 40 - i * yAxisStep),
-        Offset(45, size.height - 40 - i * yAxisStep),
-        Paint()..color = Colors.grey,
-      );
-
-      // 绘制刻度值
-      textPainter.text = TextSpan(
-        text: '${yAxisValues[i]}',
-        style: const TextStyle(color: Colors.grey, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(10, size.height - 40 - i * yAxisStep - textPainter.height / 2),
-      );
-    }
-
-    // 绘制折线和数据点
-    final path = Path();
-    bool isFirstValidPoint = true;
-    final now = DateTime.now();
-
-    for (int i = 0; i < 7; i++) {
-      // 明确使用 7 而不是 data.length
-      final currentDate = DateTime.now().subtract(Duration(days: i));
-      final double x = 40 + i * 60.0;
-      final double y = size.height - 40 - (confetti[i].speed * progress * 2.0);
-
-      // 只绘制到今天的数据点
-      if (!currentDate.isAfter(now)) {
-        if (isFirstValidPoint) {
-          path.moveTo(x, y);
-          isFirstValidPoint = false;
-        } else {
-          path.lineTo(x, y);
-        }
-
-        // 绘制数据点
-        canvas.drawCircle(Offset(x, y), 4, pointPaint);
-      }
-
-      // 总是绘制所有七个星期标签
-      textPainter.text = TextSpan(
-        text: '${currentDate.day}',
-        style: TextStyle(
-          color: currentDate.isAfter(now)
-              ? Colors.grey.withOpacity(0.5)
-              : Colors.grey,
-          fontSize: 12,
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: particle.width * (1 - progress * 0.5),
+            height: particle.height,
+          ),
+          const Radius.circular(1),
         ),
+        paint,
       );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(x - textPainter.width / 2, size.height - 35),
-      );
-    }
 
-    canvas.drawPath(path, paint);
+      canvas.restore();
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(ConfettiPainter oldDelegate) => true;
 }
 
 class RecentReadingPage extends StatefulWidget {
