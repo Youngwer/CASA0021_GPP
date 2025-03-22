@@ -1,4 +1,4 @@
-//V29：新增Group页面、Group_Members列表排布（还不均匀），恢复烟花特效
+//V30：Group_Members页面的"2/8"正常
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -3082,80 +3082,58 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
               if (selectedTab == 'Members')
                 Column(
                   children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: '2',
+                                  style: TextStyle(
+                                    fontSize: 50,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFF4ED2C),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '    /    8',
+                                  style: TextStyle(
+                                    fontSize: 50,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // 左侧：reading 部分
-                        SizedBox(
-                          width: 100,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '2',
-                                style: TextStyle(
-                                  fontSize: 50,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFF4ED2C),
-                                ),
-                              ),
-                              Center(
-                                widthFactor: 1.5, // 减小宽度使文本向左移动
-                                child: Text(
-                                  'reading                             total',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[700],
-                                  ),
-                                  softWrap: false,
-                                  overflow: TextOverflow.visible,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          'reading',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
                           ),
                         ),
-                        // 中间：分隔符
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(top: 0), // 将 top 从 5 改为 0
-                          child: Text(
-                            '/',
-                            style: TextStyle(
-                              fontSize: 45,
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        // 右侧：total 部分
-                        SizedBox(
-                          width: 100,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 15),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      '8',
-                                      style: TextStyle(
-                                        fontSize: 26,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                        const SizedBox(width: 100),
+                        Text(
+                          'total',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 5), // 将原来的 40 改为 20，减少间距
                     // 按行构建用户列表
                     Column(
                       children: [
@@ -3163,7 +3141,7 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                           Transform.translate(
                             offset: i == 0
                                 ? Offset.zero
-                                : const Offset(0, -80), // 从第二组开始，向上移动以缩短间距
+                                : const Offset(0, -120), // 将 -80 改为 -120
                             child: Column(
                               children: [
                                 // Logo 行
@@ -3188,7 +3166,7 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                                 const SizedBox(height: 0),
                                 // 用户信息行
                                 Transform.translate(
-                                  offset: const Offset(0, -50), // 保持与图片的距离不变
+                                  offset: const Offset(0, -50),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -3248,7 +3226,7 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 10), // 缩短每组之间的间距为原来的一半
+                                const SizedBox(height: 5), // 将 height 从 10 改为 5
                               ],
                             ),
                           ),
