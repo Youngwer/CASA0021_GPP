@@ -501,12 +501,16 @@ class HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   List<Book> _searchResults = [];
   bool _skipBookSelection = false;
+  // 添加动画相关变量
+  int _currentAnimationFrame = 1;
+  Timer? _animationTimer;
 
   void _startReading() async {
     final shouldStart = await _showBookSelectionDialog();
     if (shouldStart == true) {
       setState(() {
         _isReading = true;
+        _currentAnimationFrame = 1; // 重置动画帧
       });
       _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
         setState(() {
@@ -519,11 +523,22 @@ class HomePageState extends State<HomePage> {
           }
         });
       });
+
+      // 添加动画计时器
+      final animationInterval = (_goalMinutes * 60) ~/ 8; // 计算每个动画帧的时间间隔（秒）
+      _animationTimer = Timer.periodic(Duration(seconds: animationInterval), (timer) {
+        setState(() {
+          if (_currentAnimationFrame < 9) {
+            _currentAnimationFrame++;
+          }
+        });
+      });
     }
   }
 
   void _stopReading() async {
     _timer?.cancel();
+    _animationTimer?.cancel(); // 停止动画计时器
 
     final result = await showDialog<bool>(
       context: context,
@@ -913,6 +928,7 @@ class HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _animationTimer?.cancel(); // 确保在dispose时也取消动画计时器
     super.dispose();
   }
 
@@ -921,20 +937,36 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFC2C2C6),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(25, 60, 25, 16), // 修改回上边距为60
+        padding: const EdgeInsets.fromLTRB(25, 60, 25, 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // 保持左对齐
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               "Today's Reading",
               style: TextStyle(
-                fontSize: 28, // 字体大小28
-                fontWeight: FontWeight.bold, // 粗体
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
-            // 增加上方空间，将计时器下移
-            const Expanded(flex: 4, child: SizedBox()),
+            const SizedBox(height: 35), // 增加与标题的间距
+
+            // 添加动画显示
+            Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width - 50, // 减去左右各25的padding
+                height: 200,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/Animation/R$_currentAnimationFrame.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 35), // 增加与计时器的间距
 
             // 计时器部分
             Row(
@@ -1057,27 +1089,41 @@ class HomePageState extends State<HomePage> {
                           color: const Color(0xFFF4ED2C),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(15), // 统一内边距为15
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                'Recent',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: const [
+                                  Text(
+                                    'Recent',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Reading',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 5),
+                                child: Image.asset(
+                                  'assets/images/Icon/Recent.png',
+                                  fit: BoxFit.contain,
                                 ),
                               ),
-                              Text(
-                                'Reading',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1095,7 +1141,7 @@ class HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.all(15.0),
+                            padding: const EdgeInsets.all(15),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: const [
@@ -1114,6 +1160,15 @@ class HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              child: Image.asset(
+                                'assets/images/Icon/Device.png',
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ],
