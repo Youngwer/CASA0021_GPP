@@ -419,113 +419,39 @@ class MainPage extends StatefulWidget {
 
 class MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    // 在 build 方法中创建 _pages 列表，这样可以使用 widget.username
-    final List<Widget> _pages = [
-      HomePage(username: widget.username), // 传递用户名
-      const LibraryPage(),
-      const GroupPage(),
-      const SettingPage(),
-    ];
-
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey.shade300,
-              width: 1.0,
-            ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_filled),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_rounded),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: '',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          elevation: 0,
-          onTap: (value) {
-            setState(() {
-              _selectedIndex = value;
-            });
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  final String username;
-
-  const HomePage({
-    super.key,
-    required this.username,
-  });
-
-  @override
-  HomePageState createState() => HomePageState();
-}
-
-class HomePageState extends State<HomePage> {
-  int _goalMinutes = 60;
-  int _alreadyMinutes = 0;
+  double _goalMinutes = 60;
+  double _alreadyMinutes = 0;
   bool _isReading = false;
   Timer? _timer;
   Book? _selectedBook;
-  int _noSpecificBookMinutes = 0;
+  double _noSpecificBookMinutes = 0;
+  int _currentAnimationFrame = 1;
+  Timer? _animationTimer;
+  // 添加搜索相关的变量
   final TextEditingController _searchController = TextEditingController();
   List<Book> _searchResults = [];
   bool _skipBookSelection = false;
-  // 添加动画相关变量
-  int _currentAnimationFrame = 1;
-  Timer? _animationTimer;
 
   void _startReading() async {
     final shouldStart = await _showBookSelectionDialog();
     if (shouldStart == true) {
       setState(() {
         _isReading = true;
-        _currentAnimationFrame = 1; // 重置动画帧
+        _currentAnimationFrame = 1;
       });
-      _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
         setState(() {
-          _alreadyMinutes++;
+          _alreadyMinutes += 0.5;
           if (_selectedBook != null) {
-            _selectedBook!.readMinutes++;
+            _selectedBook!.readMinutes += 0.5;
             _selectedBook!.progress = _selectedBook!.readMinutes / _goalMinutes;
           } else {
-            _noSpecificBookMinutes++;
+            _noSpecificBookMinutes += 0.5;
           }
         });
       });
 
-      // 添加动画计时器
-      final animationInterval = (_goalMinutes * 60) ~/ 8; // 计算每个动画帧的时间间隔（秒）
+      final animationInterval = (_goalMinutes * 60) ~/ 8;
       _animationTimer = Timer.periodic(Duration(seconds: animationInterval), (timer) {
         setState(() {
           if (_currentAnimationFrame < 9) {
@@ -538,7 +464,7 @@ class HomePageState extends State<HomePage> {
 
   void _stopReading() async {
     _timer?.cancel();
-    _animationTimer?.cancel(); // 停止动画计时器
+    _animationTimer?.cancel();
 
     final result = await showDialog<bool>(
       context: context,
@@ -654,7 +580,6 @@ class HomePageState extends State<HomePage> {
     );
 
     if (result == true) {
-      // 显示彩带特效
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -674,7 +599,7 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> _showGoalPicker() async {
-    final List<int> goalOptions = [30, 60, 90, 120, 150, 180]; // 修改时间选项
+    final List<double> goalOptions = [0.5, 10, 15, 30, 60, 90, 120, 150, 180];
 
     await showDialog(
       context: context,
@@ -684,10 +609,12 @@ class HomePageState extends State<HomePage> {
             width: double.minPositive,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: goalOptions.length, // 修改为6个选项
+              itemCount: goalOptions.length,
               itemBuilder: (BuildContext context, int index) {
+                final value = goalOptions[index];
+                final displayValue = value == 0.5 ? '0.5' : value.toInt().toString();
                 return ListTile(
-                  title: Text('${goalOptions[index]} minutes'),
+                  title: Text('$displayValue minutes'),
                   onTap: () {
                     setState(() {
                       _goalMinutes = goalOptions[index];
@@ -728,7 +655,6 @@ class HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // 搜索框
                     Container(
                       height: 35,
                       decoration: BoxDecoration(
@@ -774,7 +700,6 @@ class HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // 书本列表
                     SizedBox(
                       height: 180,
                       child: _searchResults.isEmpty
@@ -879,7 +804,6 @@ class HomePageState extends State<HomePage> {
                             ),
                     ),
                     const SizedBox(height: 16),
-                    // 暂不选择具体书本的选项
                     CheckboxListTile(
                       value: _skipBookSelection,
                       onChanged: (value) {
@@ -898,7 +822,6 @@ class HomePageState extends State<HomePage> {
                       contentPadding: EdgeInsets.zero,
                     ),
                     const SizedBox(height: 16),
-                    // Submit 按钮
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -928,10 +851,108 @@ class HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _timer?.cancel();
-    _animationTimer?.cancel(); // 确保在dispose时也取消动画计时器
+    _animationTimer?.cancel();
+    _searchController.dispose(); // 添加控制器的销毁
     super.dispose();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      HomePage(
+        username: widget.username,
+        isReading: _isReading,
+        goalMinutes: _goalMinutes,
+        alreadyMinutes: _alreadyMinutes,
+        selectedBook: _selectedBook,
+        currentAnimationFrame: _currentAnimationFrame,
+        onStartReading: _startReading,
+        onStopReading: _stopReading,
+        onShowGoalPicker: _showGoalPicker,
+      ),
+      const LibraryPage(),
+      const GroupPage(),
+      const SettingPage(),
+    ];
+
+    return Scaffold(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade300,
+              width: 1.0,
+            ),
+          ),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book_rounded),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: '',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
+          backgroundColor: Colors.white,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          elevation: 0,
+          onTap: (value) {
+            setState(() {
+              _selectedIndex = value;
+            });
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  final String username;
+  final bool isReading;
+  final double goalMinutes;
+  final double alreadyMinutes;
+  final Book? selectedBook;
+  final int currentAnimationFrame;
+  final VoidCallback onStartReading;
+  final VoidCallback onStopReading;
+  final VoidCallback onShowGoalPicker;
+
+  const HomePage({
+    super.key,
+    required this.username,
+    required this.isReading,
+    required this.goalMinutes,
+    required this.alreadyMinutes,
+    required this.selectedBook,
+    required this.currentAnimationFrame,
+    required this.onStartReading,
+    required this.onStopReading,
+    required this.onShowGoalPicker,
+  });
+
+  @override
+  HomePageState createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -949,30 +970,27 @@ class HomePageState extends State<HomePage> {
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 35), // 增加与标题的间距
+            const SizedBox(height: 35),
 
-            // 添加动画显示
             Center(
               child: Container(
-                width: MediaQuery.of(context).size.width - 50, // 减去左右各25的padding
+                width: MediaQuery.of(context).size.width - 50,
                 height: 200,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: Image.asset(
-                    'assets/images/Animation/R$_currentAnimationFrame.png',
+                    'assets/images/Animation/R${widget.currentAnimationFrame}.png',
                     fit: BoxFit.contain,
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 35), // 增加与计时器的间距
+            const SizedBox(height: 35),
 
-            // 计时器部分
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Already read time
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -981,7 +999,7 @@ class HomePageState extends State<HomePage> {
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
-                      '${_alreadyMinutes} min',
+                      '${widget.alreadyMinutes.toInt()} min',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -995,13 +1013,12 @@ class HomePageState extends State<HomePage> {
                   ],
                 ),
 
-                // Start/Stop button
                 GestureDetector(
                   onTap: () {
-                    if (_isReading) {
-                      _stopReading();
+                    if (widget.isReading) {
+                      widget.onStopReading();
                     } else {
-                      _startReading();
+                      widget.onStartReading();
                     }
                   },
                   child: Container(
@@ -1014,7 +1031,7 @@ class HomePageState extends State<HomePage> {
                     child: Row(
                       children: [
                         Text(
-                          _isReading ? 'Stop' : 'Start',
+                          widget.isReading ? 'Stop' : 'Start',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1026,7 +1043,7 @@ class HomePageState extends State<HomePage> {
                           height: 20,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _isReading ? Colors.red : Colors.orange,
+                            color: widget.isReading ? Colors.red : Colors.orange,
                           ),
                         ),
                       ],
@@ -1034,9 +1051,8 @@ class HomePageState extends State<HomePage> {
                   ),
                 ),
 
-                // Goal time
                 GestureDetector(
-                  onTap: _showGoalPicker,
+                  onTap: widget.onShowGoalPicker,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -1045,7 +1061,7 @@ class HomePageState extends State<HomePage> {
                         style: TextStyle(fontSize: 16),
                       ),
                       Text(
-                        '${_goalMinutes} min',
+                        '${widget.goalMinutes == 0.5 ? '0.5' : widget.goalMinutes.toInt()} min',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1062,15 +1078,13 @@ class HomePageState extends State<HomePage> {
               ],
             ),
 
-            const SizedBox(height: 14), // 使用固定高度代替 Expanded
+            const SizedBox(height: 14),
 
-            // Recent Reading 和 Device Setting 部分
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.35, // 稍微减小卡片高度
+              height: MediaQuery.of(context).size.height * 0.35,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Recent Reading Card
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -1129,7 +1143,6 @@ class HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  // Device Setting Card
                   Expanded(
                     child: Container(
                       margin: const EdgeInsets.only(left: 10),
@@ -1178,7 +1191,7 @@ class HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 10), // 使用固定高度保持与上方相同
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -1191,7 +1204,7 @@ class Book {
   final String author;
   final String imageUrl;
   double progress;
-  int readMinutes;
+  double readMinutes;
   final int totalPages;
   int currentPage;
 
