@@ -1,4 +1,5 @@
-//V42：Setting页面
+//V43：UI细节
+import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'dart:async';
@@ -658,49 +659,33 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> _showGoalPicker() async {
-    final selectedGoal = await showDialog<int>(
+    final List<int> goalOptions = [30, 60, 90, 120, 150, 180]; // 修改时间选项
+
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
-        int tempGoal = _goalMinutes;
         return AlertDialog(
-          title: const Text('Set Reading Goal'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return DropdownButton<int>(
-                value: tempGoal,
-                items: [30, 45, 60, 90, 120].map((int value) {
-                  return DropdownMenuItem<int>(
-                    value: value,
-                    child: Text('$value minutes'),
-                  );
-                }).toList(),
-                onChanged: (int? newValue) {
-                  setState(() {
-                    tempGoal = newValue!;
-                  });
-                },
-              );
-            },
+          content: SizedBox(
+            width: double.minPositive,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: goalOptions.length, // 修改为6个选项
+              itemBuilder: (BuildContext context, int index) {
+                return ListTile(
+                  title: Text('${goalOptions[index]} minutes'),
+                  onTap: () {
+                    setState(() {
+                      _goalMinutes = goalOptions[index];
+                    });
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+            ),
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text('Confirm'),
-              onPressed: () => Navigator.of(context).pop(tempGoal),
-            ),
-          ],
         );
       },
     );
-
-    if (selectedGoal != null) {
-      setState(() {
-        _goalMinutes = selectedGoal;
-      });
-    }
   }
 
   Future<bool> _showBookSelectionDialog() async {
@@ -934,16 +919,20 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Today's Reading"),
-        backgroundColor: const Color(0xFFC2C2C6),
-        elevation: 0,
-      ),
       backgroundColor: const Color(0xFFC2C2C6),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.fromLTRB(25, 60, 25, 16), // 修改回上边距为60
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // 保持左对齐
           children: [
+            const Text(
+              "Today's Reading",
+              style: TextStyle(
+                fontSize: 28, // 字体大小28
+                fontWeight: FontWeight.bold, // 粗体
+                color: Colors.black,
+              ),
+            ),
             // 增加上方空间，将计时器下移
             const Expanded(flex: 4, child: SizedBox()),
 
@@ -957,10 +946,10 @@ class HomePageState extends State<HomePage> {
                   children: [
                     const Text(
                       'Already',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 16),
                     ),
                     Text(
-                      '${_alreadyMinutes}min',
+                      '${_alreadyMinutes} min',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -1021,10 +1010,10 @@ class HomePageState extends State<HomePage> {
                     children: [
                       const Text(
                         'Goal',
-                        style: TextStyle(fontSize: 14),
+                        style: TextStyle(fontSize: 16),
                       ),
                       Text(
-                        '${_goalMinutes}min',
+                        '${_goalMinutes} min',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1068,24 +1057,27 @@ class HomePageState extends State<HomePage> {
                           color: const Color(0xFFF4ED2C),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Recent',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                        child: Padding(
+                          padding: const EdgeInsets.all(15), // 统一内边距为15
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Recent',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'Reading',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
+                              Text(
+                                'Reading',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -1193,19 +1185,19 @@ class _LibraryPageState extends State<LibraryPage> {
       backgroundColor: const Color(0xFFC2C2C6),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(25, 9, 25, 16), // 上边距60，左右边距25
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start, // 左对齐
             children: [
               const Text(
-                'Your book\nCollections',
+                'Your Book\nCollection',
                 style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+                  fontSize: 28, // 字体大小28
+                  fontWeight: FontWeight.bold, // 粗体
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 15),
 
               // 修改搜索框
               Container(
