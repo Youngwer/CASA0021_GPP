@@ -1,4 +1,4 @@
-//V37：Group_Books页面 上半部分做好了，下半部分死活写不出来...先搁置一下吧
+//V39：群组页面的Books清单完善，恢复了Library页面的布局，新增Family群组的头像
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -1346,7 +1346,6 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _buildBookCard(Book book) {
-    // 计算阅读进度百分比
     double progressPercentage = book.totalPages > 0
         ? (book.currentPage / book.totalPages * 100).roundToDouble()
         : 0.0;
@@ -1366,44 +1365,44 @@ class _LibraryPageState extends State<LibraryPage> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 第一行：书籍封面图片
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            child: book.imageUrl.isEmpty
-                ? Container(
-                    height: 120,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: Text(
-                        book.title,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+          // 增加图片部分的高度，占据卡片大部分空间
+          Expanded(
+            flex: 4, // 图片部分占据更多空间
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(8)),
+              child: book.imageUrl.isEmpty
+                  ? Container(
+                      color: Colors.grey[200],
+                      child: Center(
+                        child: Text(
+                          book.title,
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                    )
+                  : Image.asset(
+                      book.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                  )
-                : Image.asset(
-                    book.imageUrl,
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+            ),
           ),
-          // 第二行到第四行：书籍信息
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0), // 移除底部padding
+          // 书籍信息部分固定在底部
+          Container(
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // 第二行：书名
                 Text(
                   book.title,
                   style: const TextStyle(
@@ -1414,7 +1413,6 @@ class _LibraryPageState extends State<LibraryPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                // 第三行：作者
                 Text(
                   book.author,
                   style: TextStyle(
@@ -1425,34 +1423,31 @@ class _LibraryPageState extends State<LibraryPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                // 第四行：进度条和百分比
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6), // 只给进度条部分添加底部间距
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: book.currentPage / book.totalPages,
-                            backgroundColor: Colors.grey[200],
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFFF4ED2C),
-                            ),
-                            minHeight: 3,
+                // 进度条
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: progressPercentage / 100,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF6B4EFF),
                           ),
+                          minHeight: 4,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${progressPercentage.toInt()}%',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey[600],
-                        ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${progressPercentage.toInt()}%',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B4EFF),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1619,14 +1614,6 @@ class GroupPage extends StatelessWidget {
       'name': 'Family',
       'memberCount': 3,
     },
-    {
-      'name': 'read partner',
-      'memberCount': 2,
-    },
-    {
-      'name': 'who is reading?',
-      'memberCount': 4,
-    },
   ];
 
   // CE Universe 群组的用户数据
@@ -1743,19 +1730,14 @@ class GroupPage extends StatelessWidget {
                                               ),
                                             ))
                                         .toList()
-                                    : List.generate(
-                                        groups[index]['memberCount'],
-                                        (i) => Container(
-                                          width: 30,
-                                          height: 30,
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
+                                    : [
+                                        _buildAvatar('assets/images/mom.png'),
+                                        _buildAvatar('assets/images/dad.png'),
+                                        _buildAvatar(
+                                            'assets/images/Qijing.png'), // 将 'qijing' 改为 'Qijing'
+                                      ],
                               ),
-                              const SizedBox(height: 33), // 增加间距使 logo 向下移动
+                              const Spacer(),
                               Center(
                                 child: Image.asset(
                                   'assets/images/GroupLogo.png',
@@ -1774,6 +1756,20 @@ class GroupPage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String imagePath) {
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.cover,
         ),
       ),
     );
@@ -3513,6 +3509,315 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                     ),
                     const SizedBox(height: 15),
                     // 这里可以添加其他书籍的列表
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Row(
+                            children: [
+                              // 书籍封面
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  'assets/images/book1_educated.jpg', // 更改图片路径
+                                  width: 100,
+                                  height: 150, // 将原来的 150 改为 145
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              // 书籍信息
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Educated', // 更改书名
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Tara Westover', // 更改作者名
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    // 阅读人数信息
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people_outline,
+                                          size: 20,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          '3: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        // 读者头像
+                                        for (var i = 0; i < 3; i++)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 5),
+                                            child: Container(
+                                              width: 25,
+                                              height: 25,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  image: AssetImage(
+                                                    i == 0
+                                                        ? 'assets/images/Wenhao.png'
+                                                        : i == 1
+                                                            ? 'assets/images/Andy.png'
+                                                            : 'assets/images/Qijing.png', // 直接使用第三张照片，移除了多余的条件判断
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    //
+                    //
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Row(
+                            children: [
+                              // 书籍封面
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  'assets/images/book6_muscle.jpg', // 更改图片路径
+                                  width: 100,
+                                  height: 150, // 将原来的 150 改为 145
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              // 书籍信息
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Muscle', // 更改书名
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Alan Trotter', // 更改作者名
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    // 阅读人数信息
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people_outline,
+                                          size: 20,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          '3: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        // 读者头像
+                                        for (var i = 0; i < 3; i++)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 5),
+                                            child: Container(
+                                              width: 25,
+                                              height: 25,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  image: AssetImage(
+                                                    i == 0
+                                                        ? 'assets/images/Qijie.png'
+                                                        : i == 1
+                                                            ? 'assets/images/Duncan.png'
+                                                            : 'assets/images/Valerio.png', // 直接使用第三张照片，移除了多余的条件判断
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    //
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Row(
+                            children: [
+                              // 书籍封面
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  'assets/images/book5_west.jpg', // 更改图片路径
+                                  width: 100,
+                                  height: 150, // 将原来的 150 改为 145
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              // 书籍信息
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'West with the Night', // 更改书名
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Beryl Markham', // 更改作者名
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    // 阅读人数信息
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people_outline,
+                                          size: 20,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          '2: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        // 读者头像
+                                        for (var i = 0; i < 2; i++)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 5),
+                                            child: Container(
+                                              width: 25,
+                                              height: 25,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                image: DecorationImage(
+                                                  image: AssetImage(
+                                                    i == 0
+                                                        ? 'assets/images/Leah.png'
+                                                        : 'assets/images/Qijing.png', // 直接使用第三张照片，移除了多余的条件判断
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    //
                   ],
                 ),
               ],
