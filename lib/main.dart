@@ -1,5 +1,4 @@
-//V39：群组页面的Books清单完善，恢复了Library页面的布局，新增Family群组的头像
-import 'package:flutter/material.dart';
+//V42：Setting页面
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'dart:async';
@@ -1604,7 +1603,7 @@ class _LibraryPageState extends State<LibraryPage> {
 class GroupPage extends StatelessWidget {
   const GroupPage({super.key});
 
-  // 群组数据
+  // 保持原有的群组数据不变
   final List<Map<String, dynamic>> groups = const [
     {
       'name': "CE Universe",
@@ -1613,42 +1612,6 @@ class GroupPage extends StatelessWidget {
     {
       'name': 'Family',
       'memberCount': 3,
-    },
-  ];
-
-  // CE Universe 群组的用户数据
-  final List<Map<String, dynamic>> ceUniverseUsers = const [
-    {
-      'name': 'Andy',
-      'photo': 'assets/images/Andy.png',
-    },
-    {
-      'name': 'Valerio',
-      'photo': 'assets/images/Valerio.png',
-    },
-    {
-      'name': 'Leah',
-      'photo': 'assets/images/Leah.png',
-    },
-    {
-      'name': 'Duncan',
-      'photo': 'assets/images/Duncan.png',
-    },
-    {
-      'name': 'Qijie',
-      'photo': 'assets/images/Qijie.png',
-    },
-    {
-      'name': 'Ke',
-      'photo': 'assets/images/Ke.png',
-    },
-    {
-      'name': 'Wenhao',
-      'photo': 'assets/images/Wenhao.png',
-    },
-    {
-      'name': 'Qijing',
-      'photo': 'assets/images/Qijing.png',
     },
   ];
 
@@ -1661,15 +1624,38 @@ class GroupPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Group',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+            // 标题栏和添加按钮
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Group',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _showCreateGroupDialog(context),
+                  child: Container(
+                    width: 35,
+                    height: 35,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
+            // 保持原有的群组列表不变
             SizedBox(
               height: 350,
               child: ListView.builder(
@@ -1682,72 +1668,43 @@ class GroupPage extends StatelessWidget {
                       left: index == 0 ? 0 : 0,
                     ),
                     child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GroupMembersPage(
-                              groupName: groups[index]['name'],
-                            ),
-                          ),
-                        );
-                      },
+                      onTap: groups[index]['name'] == 'CE Universe'
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GroupMembersPage(
+                                    groupName: groups[index]['name'],
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
                       child: Container(
                         width: 260,
                         decoration: BoxDecoration(
                           color: const Color(0xFFD9D9D9),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Text(
                                 groups[index]['name'],
                                 style: const TextStyle(
-                                  fontSize: 23,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 20),
-                              // 修改用户头像显示
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: index == 0
-                                    ? ceUniverseUsers
-                                        .map((user) => Container(
-                                              width: 30,
-                                              height: 30,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                  image:
-                                                      AssetImage(user['photo']),
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ))
-                                        .toList()
-                                    : [
-                                        _buildAvatar('assets/images/mom.png'),
-                                        _buildAvatar('assets/images/dad.png'),
-                                        _buildAvatar(
-                                            'assets/images/Qijing.png'), // 将 'qijing' 改为 'Qijing'
-                                      ],
-                              ),
-                              const Spacer(),
-                              Center(
-                                child: Image.asset(
-                                  'assets/images/GroupLogo.png',
-                                  width: 140,
-                                  height: 140,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            // 头像列表
+                            if (groups[index]['name'] == 'CE Universe')
+                              _buildCEUniverseAvatars()
+                            else
+                              _buildFamilyAvatars(),
+                          ],
                         ),
                       ),
                     ),
@@ -1761,32 +1718,378 @@ class GroupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(String imagePath) {
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.cover,
-        ),
+  Widget _buildCEUniverseAvatars() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Wrap(
+        spacing: 5,
+        runSpacing: 5,
+        children: [
+          _buildAvatar('assets/images/Andy.png'),
+          _buildAvatar('assets/images/Valerio.png'),
+          _buildAvatar('assets/images/Leah.png'),
+          _buildAvatar('assets/images/Duncan.png'),
+          _buildAvatar('assets/images/Qijie.png'),
+          _buildAvatar('assets/images/Ke.png'),
+          _buildAvatar('assets/images/Wenhao.png'),
+          _buildAvatar('assets/images/Qijing.png'),
+        ],
       ),
+    );
+  }
+
+  Widget _buildFamilyAvatars() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Wrap(
+        spacing: 5,
+        runSpacing: 5,
+        children: [
+          _buildAvatar('assets/images/mom.png'),
+          _buildAvatar('assets/images/dad.png'),
+          _buildAvatar('assets/images/Qijing.png'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String imagePath) {
+    return CircleAvatar(
+      radius: 15,
+      backgroundImage: AssetImage(imagePath),
+    );
+  }
+
+  void _showCreateGroupDialog(BuildContext context) {
+    final groupNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.95),
+          contentPadding: const EdgeInsets.all(20),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Create new group',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Text(
+                    'Group name: ',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextField(
+                        controller: groupNameController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Text(
+                    'Group members: ',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'invite friends',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF4ED2C),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-class SettingPage extends StatelessWidget {
+class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
+
+  @override
+  State<SettingPage> createState() => _SettingPageState();
+}
+
+class _SettingPageState extends State<SettingPage> {
+  // 隐私设置开关状态
+  bool readingStatusEnabled = true;
+  bool readingTimeEnabled = true;
+  bool bookListEnabled = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(25, 60, 25, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 用户信息部分
+            Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/Qijing.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                const Text(
+                  'Qijing',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 30),
+
+            // My Booklight 部分
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                children: [
+                  Text(
+                    'My Booklight',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Spacer(),
+                  Icon(Icons.menu, color: Colors.black),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 在线状态 - 向右移动5个单位
+            Padding(
+              padding: const EdgeInsets.only(left: 5),
+              child: Row(
+                children: [
+                  const Icon(Icons.book_outlined, color: Colors.black),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'online',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // 隐私设置部分
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Privacy Setting',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Allowing other users to see you...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  _buildSwitchRow('reading status', readingStatusEnabled,
+                      (value) {
+                    setState(() => readingStatusEnabled = value);
+                  }),
+                  _buildSwitchRow('reading time statistic', readingTimeEnabled,
+                      (value) {
+                    setState(() => readingTimeEnabled = value);
+                  }),
+                  _buildSwitchRow('book list', bookListEnabled, (value) {
+                    setState(() => bookListEnabled = value);
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // 客服中心
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                children: [
+                  Text(
+                    'Customer service center',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(), // 添加这一行，将登出按钮推到底部
+
+            // 登出按钮
+            Center(
+              // 使用 Center 包裹来居中显示按钮
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: SizedBox(
+                  width: 150, // 设置固定宽度为150
+                  height: 45,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginPage()),
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[200],
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      'Log out',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      body: const Center(
-        child: Text('Settings Page Content'),
+    );
+  }
+
+  Widget _buildSwitchRow(String title, bool value, Function(bool) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 14),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: Colors.black,
+          ),
+        ],
       ),
     );
   }
