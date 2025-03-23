@@ -1,4 +1,4 @@
-//V43：UI细节
+//V43：Group_Members
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -452,7 +452,8 @@ class MainPageState extends State<MainPage> {
       });
 
       final animationInterval = (_goalMinutes * 60) ~/ 8;
-      _animationTimer = Timer.periodic(Duration(seconds: animationInterval), (timer) {
+      _animationTimer =
+          Timer.periodic(Duration(seconds: animationInterval), (timer) {
         setState(() {
           if (_currentAnimationFrame < 9) {
             _currentAnimationFrame++;
@@ -612,7 +613,8 @@ class MainPageState extends State<MainPage> {
               itemCount: goalOptions.length,
               itemBuilder: (BuildContext context, int index) {
                 final value = goalOptions[index];
-                final displayValue = value == 0.5 ? '0.5' : value.toInt().toString();
+                final displayValue =
+                    value == 0.5 ? '0.5' : value.toInt().toString();
                 return ListTile(
                   title: Text('$displayValue minutes'),
                   onTap: () {
@@ -971,7 +973,6 @@ class HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 35),
-
             Center(
               child: Container(
                 width: MediaQuery.of(context).size.width - 50,
@@ -980,7 +981,8 @@ class HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(20),
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 500), // 动画持续时间
-                    transitionBuilder: (Widget child, Animation<double> animation) {
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
                       return FadeTransition(
                         opacity: animation,
                         child: child,
@@ -988,16 +990,15 @@ class HomePageState extends State<HomePage> {
                     },
                     child: Image.asset(
                       'assets/images/Animation/R${widget.currentAnimationFrame}.png',
-                      key: ValueKey<int>(widget.currentAnimationFrame), // 添加key以触发动画
+                      key: ValueKey<int>(
+                          widget.currentAnimationFrame), // 添加key以触发动画
                       fit: BoxFit.contain,
                     ),
                   ),
                 ),
               ),
             ),
-
             const SizedBox(height: 35),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -1022,7 +1023,6 @@ class HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-
                 GestureDetector(
                   onTap: () {
                     if (widget.isReading) {
@@ -1053,14 +1053,14 @@ class HomePageState extends State<HomePage> {
                           height: 20,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: widget.isReading ? Colors.red : Colors.orange,
+                            color:
+                                widget.isReading ? Colors.red : Colors.orange,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-
                 GestureDetector(
                   onTap: widget.onShowGoalPicker,
                   child: Column(
@@ -1087,9 +1087,7 @@ class HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 14),
-
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.35,
               child: Row(
@@ -1140,7 +1138,8 @@ class HomePageState extends State<HomePage> {
                             ),
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 5),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 5),
                                 child: Image.asset(
                                   'assets/images/Icon/Recent.png',
                                   fit: BoxFit.contain,
@@ -1152,7 +1151,6 @@ class HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-
                   Expanded(
                     child: Container(
                       margin: const EdgeInsets.only(left: 10),
@@ -1187,7 +1185,8 @@ class HomePageState extends State<HomePage> {
                           ),
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 5),
                               child: Image.asset(
                                 'assets/images/Icon/Device.png',
                                 fit: BoxFit.contain,
@@ -1795,14 +1794,14 @@ class GroupPage extends StatelessWidget {
         spacing: 5,
         runSpacing: 5,
         children: [
-          _buildAvatar('assets/images/Andy.png'),
-          _buildAvatar('assets/images/Valerio.png'),
-          _buildAvatar('assets/images/Leah.png'),
-          _buildAvatar('assets/images/Duncan.png'),
-          _buildAvatar('assets/images/Qijie.png'),
-          _buildAvatar('assets/images/Ke.png'),
-          _buildAvatar('assets/images/Wenhao.png'),
-          _buildAvatar('assets/images/Qijing.png'),
+          _buildAvatar('assets/images/Andy.png'), // 1
+          _buildAvatar('assets/images/Valerio.png'), // 2
+          _buildAvatar('assets/images/Leah.png'), // 3
+          _buildAvatar('assets/images/Duncan.png'), // 4
+          _buildAvatar('assets/images/Qijie.png'), // 5
+          _buildAvatar('assets/images/Ke.png'), // 6
+          _buildAvatar('assets/images/Wenhao.png'), // 7
+          _buildAvatar('assets/images/Qijing.png'), // 8
         ],
       ),
     );
@@ -3529,7 +3528,7 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                                                 ? 'assets/images/GroupLogo3.png' // 第一行使用 GroupLogo3
                                                 : 'assets/images/GroupLogo2.png', // 其他行使用 GroupLogo2
                                             width: 160,
-                                            height: 112,
+                                            height: 225, // 统一所有图片高度为225
                                             fit: BoxFit.contain,
                                           ),
                                           const SizedBox(width: 20),
@@ -3538,7 +3537,7 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                                                 ? 'assets/images/GroupLogo3.png' // 第一行使用 GroupLogo3
                                                 : 'assets/images/GroupLogo2.png', // 其他行使用 GroupLogo2
                                             width: 160,
-                                            height: 225,
+                                            height: 225, // 统一所有图片高度为225
                                             fit: BoxFit.contain,
                                           ),
                                         ],
