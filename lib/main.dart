@@ -978,9 +978,19 @@ class HomePageState extends State<HomePage> {
                 height: 200,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/images/Animation/R${widget.currentAnimationFrame}.png',
-                    fit: BoxFit.contain,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500), // 动画持续时间
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/images/Animation/R${widget.currentAnimationFrame}.png',
+                      key: ValueKey<int>(widget.currentAnimationFrame), // 添加key以触发动画
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
