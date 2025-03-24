@@ -30,6 +30,10 @@ void toggleBook() {
         stopReadingTimer();
         // 停止番茄钟
         pomodoroActive = false;
+        if (isTouch) {
+          isTouch = false;
+          publishTouchStatus(false);
+        }
     } else {
         openBook();
         startReadingTimer();
