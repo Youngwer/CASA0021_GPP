@@ -1,4 +1,4 @@
-//V43：Group_Members
+//V50:UI
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -94,232 +94,250 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF8E8E93),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF8E8E93), // 上方灰色
-              Colors.grey[300]!, // 下方浅灰色
-            ],
-            stops: const [0.5, 1.0], // 调整渐变位置
+      backgroundColor: const Color(0xFF848488), // 这里设置了基础背景色
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFF7A7A7C), // 这里设置了渐变的上半部分颜色
+                const Color(0xFF7A7A7C), // 这里设置了渐变的下半部分颜色
+              ],
+              stops: const [0.5, 1.0],
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // 上半部分（Logo和标题）
-            Container(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height * 0.65,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/image2.jpg'),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    const Color(0xFF8E8E93).withOpacity(0.5),
-                    BlendMode.srcATop,
+          child: Stack(
+            // 使用 Stack 代替 Column
+            children: [
+              // 上半部分（Logo和标题）
+              Container(
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height * 0.65,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/image2.jpg'),
+                    fit: BoxFit.cover,
+                    // 移除或调整 colorFilter，让图片保持原有的亮度
+                    colorFilter: ColorFilter.mode(
+                      //const Color(0xFF8E8E93).withOpacity(0.5),
+                      Colors.white.withOpacity(0.0), // 将灰色改为白色，透明度改为 0
+                      BlendMode.srcATop,
+                    ),
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40.0, vertical: 35.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Stack(
+                          children: [
+                            const Text(
+                              'Welcome to\nLiteMate',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              top: 45,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              child: SafeArea(
+              // 登录表单
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                    ? MediaQuery.of(context).size.height * 0.45 // 将 0.4 改为 0.45
+                    : 0,
+                left: 0,
+                right: 0,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Stack(
-                        children: [
-                          const Text(
-                            'Welcome to\nInter_Glow',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                              color: Colors.black,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 15, 20, 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      // 根据键盘是否弹出来动态设置圆角
+                      borderRadius: MediaQuery.of(context).viewInsets.bottom > 0
+                          ? BorderRadius.circular(30) // 键盘弹出时四周都是圆角
+                          : const BorderRadius.only(
+                              // 在底部时只有顶部圆角
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
                             ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 添加一个顶部间距，让输入框整体下移
+                        const SizedBox(height: 10), // 新增这行，让输入框下移 10
+                        // Email TextField
+                        Container(
+                          height: 45,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                          Positioned(
-                            right: 0,
-                            top: 45,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Colors.orange,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // 登录表单
-            Positioned(
-              bottom: MediaQuery.of(context).padding.bottom + 8,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(
-                      20, 15, 20, 8), // 增加顶部内边距从 12 到 15
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Email TextField
-                      Container(
-                        height: 45,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: TextField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            hintText: 'Email',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12), // 增加间距从 8 到 12
-                      // Password TextField
-                      Container(
-                        height: 45, // 增加输入框高度从 40 到 45
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            hintText: 'Password',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12), // 增加内边距
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12), // 增加间距从 8 到 12
-                      // Login Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 45,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            final email = _emailController.text;
-                            final password = _passwordController.text;
-
-                            if (!UserData.isEmailRegistered(email)) {
-                              // 用户未注册
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('The user is not registered'),
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            } else if (!UserData.verifyUser(email, password)) {
-                              // 密码错误
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('password wrong'),
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            } else {
-                              // 获取用户名并传递给 MainPage
-                              final username = UserData.getUsername(email);
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      MainPage(username: username ?? ''),
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF4ED2C),
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'Log in',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          child: TextField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              hintText: 'Email',
+                              hintStyle: TextStyle(color: Colors.grey),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 9),
-                      // Forget password and Sign up
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 5), // 减小按钮垂直内边距到 2
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Forget password',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 13,
-                              ),
+                        const SizedBox(height: 22), // 将这里从 12 改为 22，增加间距 10
+                        // Password TextField
+                        Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              hintText: 'Password',
+                              hintStyle: TextStyle(color: Colors.grey),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
                             ),
                           ),
-                          TextButton(
+                        ),
+                        const SizedBox(height: 70), // 将这里从 85 改为 75，让按钮上移 10
+                        SizedBox(
+                          width: 150,
+                          height: 45,
+                          child: ElevatedButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const SignUpPage()),
-                              );
+                              final email = _emailController.text;
+                              final password = _passwordController.text;
+
+                              if (!UserData.isEmailRegistered(email)) {
+                                // 用户未注册
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('The user is not registered'),
+                                    duration: Duration(seconds: 3),
+                                  ),
+                                );
+                              } else if (!UserData.verifyUser(
+                                  email, password)) {
+                                // 密码错误
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('password wrong'),
+                                    duration: Duration(seconds: 3),
+                                  ),
+                                );
+                              } else {
+                                // 获取用户名并传递给 MainPage
+                                final username = UserData.getUsername(email);
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MainPage(username: username ?? ''),
+                                  ),
+                                );
+                              }
                             },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 5), // 减小按钮垂直内边距到 2
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF4ED2C),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
                             ),
-                            child: Text(
-                              'Sign up',
+                            child: const Text(
+                              'Log in',
                               style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 13,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {},
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 5), // 减小按钮垂直内边距到 2
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Forget password',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const SignUpPage()),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 5), // 减小按钮垂直内边距到 2
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Sign up',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -535,7 +553,7 @@ class MainPageState extends State<MainPage> {
                     },
                     title: const Text(
                       'no specific page',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 16),
                     ),
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
@@ -818,7 +836,7 @@ class MainPageState extends State<MainPage> {
                       },
                       title: const Text(
                         'no specific book this time',
-                        style: TextStyle(fontSize: 14),
+                        style: TextStyle(fontSize: 16),
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
@@ -884,12 +902,13 @@ class MainPageState extends State<MainPage> {
           border: Border(
             top: BorderSide(
               color: Colors.grey.shade300,
-              width: 1.0,
+              width: 2.0,
             ),
           ),
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
+          iconSize: 30.0, // 将图标大小从默认的 24.0 改为 30.0
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home_filled),
@@ -972,7 +991,7 @@ class HomePageState extends State<HomePage> {
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 35),
+            const SizedBox(height: 35), // 动画图片上方间距
             Center(
               child: Container(
                 width: MediaQuery.of(context).size.width - 50,
@@ -998,7 +1017,7 @@ class HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            const SizedBox(height: 35),
+            const SizedBox(height: 45), // 将这个值从35改为45，使卡片整体下移10个单位
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -1087,9 +1106,10 @@ class HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 40), //这个值是首页两张卡片距离上一个组件的距离高度
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.35,
+              height: MediaQuery.of(context).size.height *
+                  0.34, // 将这个值改小:首页两张卡片的高度减小
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1200,7 +1220,7 @@ class HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 10), // 这里增加一个底部间距
           ],
         ),
       ),
@@ -1501,7 +1521,8 @@ class _LibraryPageState extends State<LibraryPage> {
                           value: progressPercentage / 100,
                           backgroundColor: Colors.grey[200],
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF6B4EFF),
+                            Color.fromARGB(255, 3, 10,
+                                16), // 将这里从紫色改为蓝色 (或者使用 const Color(0xFF2196F3))
                           ),
                           minHeight: 4,
                         ),
@@ -1509,10 +1530,11 @@ class _LibraryPageState extends State<LibraryPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${progressPercentage.toInt()}%',
-                      style: const TextStyle(
+                      '${(progressPercentage).toInt()}%', // 进度百分比
+                      style: TextStyle(
+                        color:
+                            const Color.fromARGB(255, 3, 10, 16), // 这里也要改为相同的蓝色
                         fontSize: 12,
-                        color: Color(0xFF6B4EFF),
                       ),
                     ),
                   ],
@@ -1711,12 +1733,13 @@ class GroupPage extends StatelessWidget {
                     width: 35,
                     height: 35,
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: Color(
+                          0xFFF4ED2C), // 将 Colors.red 改为 Color(0xFFF4ED2C)
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.add,
-                      color: Colors.white,
+                      color: Colors.black, // 由于背景色变浅，建议将图标颜色改为黑色以提高对比度
                       size: 20,
                     ),
                   ),
@@ -1761,9 +1784,10 @@ class GroupPage extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.all(15),
                               child: Text(
-                                groups[index]['name'],
+                                groups[index]
+                                    ['name'], // 'CE Universe' 或 'Family'
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 20, // 将原来的 18 改为 20
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1824,7 +1848,7 @@ class GroupPage extends StatelessWidget {
 
   Widget _buildAvatar(String imagePath) {
     return CircleAvatar(
-      radius: 15,
+      radius: 20, // 将头像半径从 15 改为 20
       backgroundImage: AssetImage(imagePath),
     );
   }
@@ -1954,10 +1978,10 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  // 隐私设置开关状态
-  bool readingStatusEnabled = true;
-  bool readingTimeEnabled = true;
-  bool bookListEnabled = true;
+  // 修改初始状态为 false
+  bool readingStatusEnabled = false;
+  bool readingTimeEnabled = false;
+  bool bookListEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -2056,7 +2080,7 @@ class _SettingPageState extends State<SettingPage> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Allowing other users to see you...',
+                    'Allowing other users to see your:',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -2151,12 +2175,19 @@ class _SettingPageState extends State<SettingPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 16),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: Colors.black,
+          Transform.scale(
+            scale: 0.7,
+            child: Switch(
+              value: value,
+              onChanged: onChanged,
+              activeColor:
+                  const Color.fromARGB(255, 240, 221, 55), // 选中时，使用更浅的黄色
+              inactiveThumbColor: Colors.grey[400], // 未选中时滑块的颜色
+              inactiveTrackColor: Colors.grey[300], // 未选中时轨道的颜色
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
           ),
         ],
       ),
@@ -2206,7 +2237,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const Text(
-                  'Inter_Glow',
+                  'LiteMate',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28,
@@ -2968,10 +2999,24 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Recent Reading'),
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const Icon(
+            Icons
+                .arrow_back_ios, // 将默认的 Icons.arrow_back 改为 Icons.arrow_back_ios
+            size: 20, // 设置图标大小为 20
+          ),
+        ),
+        title: const Text(
+          'Recent Reading',
+          style: TextStyle(
+            fontSize: 28,
+            color: Colors.black,
+          ),
+        ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
         elevation: 0,
+        foregroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -3001,7 +3046,7 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                     _getDateDisplay(),
                     style: TextStyle(
                       color: Colors.grey[600],
-                      fontSize: 14,
+                      fontSize: 16,
                     ),
                   ),
                 ],
@@ -3035,7 +3080,7 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                     Text(
                       'Hi, ${widget.username}',
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -3047,14 +3092,14 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                           const TextSpan(
                             text: "You've read ",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 20,
                               color: Colors.grey,
                             ),
                           ),
                           TextSpan(
                             text: '${_calculateTotalReadingTime().toInt()}',
                             style: const TextStyle(
-                              fontSize: 20,
+                              fontSize: 28,
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
@@ -3064,9 +3109,9 @@ class _RecentReadingPageState extends State<RecentReadingPage> {
                                 ? ' minutes this week!'
                                 : selectedPeriod == 'month'
                                     ? ' minutes this month!'
-                                    : ' minutes this year!',
+                                    : ' hours this year!',
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 20,
                               color: Colors.grey,
                             ),
                           ),
@@ -3399,7 +3444,8 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(25, 45, 25, 16),
+        // 将底部 padding 从 16 改为 36，增加白色框高度
+        padding: const EdgeInsets.fromLTRB(25, 45, 25, 36), // 修改这里
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3494,7 +3540,7 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 5), // 将原来的 40 改为 20，减少间距
+                    const SizedBox(height: 4), // 将原来的 40 改为 20，减少间距
                     // 按行构建用户列表
                     Column(
                       children: [
