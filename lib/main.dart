@@ -1,4 +1,4 @@
-//V50:UI
+//V51:UI
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -139,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                         Stack(
                           children: [
                             const Text(
-                              'Welcome to\nLiteMate',
+                              'Welcome to\nLitMate',
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -2237,7 +2237,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const Text(
-                  'LiteMate',
+                  'LitMate',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28,
