@@ -8,7 +8,6 @@
 
 🎥 Click the image above to watch [LitMate video](https://www.youtube.com/watch?v=BeWCd5zH7cs)
 
-## **Project Overview**
 
 <h2><strong>Project Overview</strong></h2>
 
