@@ -10,12 +10,12 @@
 
 ## **Project Overview**
 
-<table border="0" style="border: none; border-collapse: collapse;">
-<tr style="border: none;">
-<td width="50%" style="border: none;">
+<table cellspacing="0" cellpadding="0" style="border: none; border-collapse: collapse; margin: 0; padding: 0;">
+<tr style="border: none; background: none;">
+<td width="50%" style="border: none; padding: 0; margin: 0; vertical-align: top;">
 <img src="./Images/book1.png" alt="Book Light" style="width: 100%;">
 </td>
-<td width="50%" style="border: none;">
+<td width="50%" style="border: none; padding: 0 0 0 20px; margin: 0; vertical-align: top;">
 This book lamp redefines reading by bridging the gap between readers, no matter the distance. It automatically opens to begin your reading session, while the companion app lets you join remote reading groups for motivation and friendly competition.
 To bridge reading friends by interaction like tap, showing reading progress. Establish a mechanism of mutual supervision and encouragement among reading partners.
 Gradually, this place will become a community with a reading atmosphere where one can find reading partners.
