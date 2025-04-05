@@ -1,23 +1,35 @@
-<div style="text-align: center; margin-bottom: 20px;">
-  <img src="./Images/title.jpg" alt="LitMate" style="width: 100%; margin-bottom: 20px;">
-  <div style="display: flex; justify-content: center; gap: 30px;">
+# LitMate
+Where reading syncs, souls resonate.
+
+<div style="display: flex; justify-content: flex-end; margin: 20px 0;">
+  <img src="./Images/logo.png" alt="LitMate Logo" style="width: 200px;">
+</div>
+
+<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+  <a href="https://github.com/wangqijie" style="text-decoration: none; color: inherit;">
     <div style="text-align: center;">
-      <img src="./Images/wqj.png" alt="Qijie Wang" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 5px;">
-      <div>Qijie Wang</div>
+      <img src="./Images/wqj.png" alt="Qijie Wang" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      <div style="margin-top: 8px;">Qijie Wang</div>
     </div>
+  </a>
+  <a href="https://github.com/zengqijing" style="text-decoration: none; color: inherit;">
     <div style="text-align: center;">
-      <img src="./Images/zqj.png" alt="Qijing Zeng" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 5px;">
-      <div>Qijing Zeng</div>
+      <img src="./Images/zqj.png" alt="Qijing Zeng" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      <div style="margin-top: 8px;">Qijing Zeng</div>
     </div>
+  </a>
+  <a href="https://github.com/yangwenhao" style="text-decoration: none; color: inherit;">
     <div style="text-align: center;">
-      <img src="./Images/ywh.png" alt="Wenhao Yang" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 5px;">
-      <div>Wenhao Yang</div>
+      <img src="./Images/ywh.png" alt="Wenhao Yang" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      <div style="margin-top: 8px;">Wenhao Yang</div>
     </div>
+  </a>
+  <a href="https://github.com/kebai" style="text-decoration: none; color: inherit;">
     <div style="text-align: center;">
-      <img src="./Images/bk.png" alt="Ke Bai" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 5px;">
-      <div>Ke Bai</div>
+      <img src="./Images/bk.png" alt="Ke Bai" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      <div style="margin-top: 8px;">Ke Bai</div>
     </div>
-  </div>
+  </a>
 </div>
 
 <a href="https://www.youtube.com/watch?v=BeWCd5zH7cs">
