@@ -1,5 +1,5 @@
 <div style="text-align: center; margin-bottom: 20px;">
-  <img src="./Images/title.jpg" alt="LitMate" style="width: 100%;">
+  <img src="./Images/title.jpg" alt="LitMate" style="width: 100%; pointer-events: none;">
 </div>
 
 <a href="https://www.youtube.com/watch?v=BeWCd5zH7cs">
@@ -10,14 +10,18 @@
 
 ## **Project Overview**
 
-<div style="display: flex; align-items: center; gap: 10px;">
-  <img src="./Images/book1.png" alt="Book Light" style="width: 50%; object-fit: contain;">
-  <div style="flex: 1;">
-    This book lamp redefines reading by bridging the gap between readers, no matter the distance. It automatically opens to begin your reading session, while the companion app lets you join remote reading groups for motivation and friendly competition.
-    To bridge reading friends by interaction like tap, showing reading progress. Establish a mechanism of mutual supervision and encouragement among reading partners.
-    Gradually, this place will become a community with a reading atmosphere where one can find reading partners.
-  </div>
-</div>
+<table border="0" style="border: none; border-collapse: collapse;">
+<tr style="border: none;">
+<td width="50%" style="border: none;">
+<img src="./Images/book1.png" alt="Book Light" style="width: 100%;">
+</td>
+<td width="50%" style="border: none;">
+This book lamp redefines reading by bridging the gap between readers, no matter the distance. It automatically opens to begin your reading session, while the companion app lets you join remote reading groups for motivation and friendly competition.
+To bridge reading friends by interaction like tap, showing reading progress. Establish a mechanism of mutual supervision and encouragement among reading partners.
+Gradually, this place will become a community with a reading atmosphere where one can find reading partners.
+</td>
+</tr>
+</table>
 
 ## **Background & Motivation**
 
