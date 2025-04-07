@@ -19,41 +19,17 @@ LitMate is a smart book light that combines IoT technology and behavioural devel
 
 ### 1.2 Background
 
-<div style="float: left; width: 23%; margin-right: 2%; text-align: center;">
-  <img src="./Images/Circle.png" alt="Reading Cycle" width="100%">
-  <p><i>Fig 2. Reading Cycle</i></p>
-</div>
-<div style="float: left; width: 23%; margin-right: 2%; text-align: center;">
-  <img src="./Images/Data.png" alt="Reading Statistics" width="100%">
-  <p><i>Fig 3. Reading Statistics</i></p>
-</div>
-<div style="float: left; width: 23%; margin-right: 2%; text-align: center;">
-  <img src="./Images/Comparation.png" alt="Reading Comparison" width="100%">
-  <p><i>Fig 4. Comparison</i></p>
-</div>
-<div style="float: left; width: 23%; text-align: center;">
-  <img src="./Images/Distraction.png" alt="Reading with Peer Support" width="100%">
-  <p><i>Fig 5. Split Scene</i></p>
-</div>
-<div style="clear: both;"></div>
+| ![Reading Cycle](./Images/Circle.png) | ![Reading Statistics](./Images/Data.png) | ![Reading Comparison](./Images/Comparation.png) | ![Reading with Peer Support](./Images/Distraction.png) |
+|:---:|:---:|:---:|:---:|
+| *Fig 2. Reading Cycle* | *Fig 3. Reading Statistics* | *Fig 4. Comparison* | *Fig 5. Split Scene* |
 
 Many readers fall into a recurring cycle: setting goals, facing time constraints, giving up, regretting, and restarting. According to a 2019 Harris Poll, 81% of U.S. adults report not reading as much as they wish due to limited time. Behavioral research on the "false hope syndrome" explains this pattern of repeated failure and renewed intention (Polivy & Herman, 2002). Social support, such as reading with friends, significantly improves habit adherence—peer accountability increases consistency (Wing & Jeffery, 1999). Thus, integrating social mechanisms may effectively transform reading into a sustainable habit.
 
 ### 1.3 Target Users
 
-<div style="float: left; width: 30%; margin-right: 3%; text-align: center;">
-  <img src="./Images/target1.png" alt="Target User 1" width="100%">
-  <p><i>Fig 6. Individual reading fan</i></p>
-</div>
-<div style="float: left; width: 30%; margin-right: 3%; text-align: center;">
-  <img src="./Images/target2.png" alt="Target User 2" width="100%">
-  <p><i>Fig 7. Family reading group</i></p>
-</div>
-<div style="float: left; width: 30%; text-align: center;">
-  <img src="./Images/target3.png" alt="Target User 3" width="100%">
-  <p><i>Fig 8. Remote reading friends</i></p>
-</div>
-<div style="clear: both;"></div>
+| ![Target User 1](./Images/target1.png) | ![Target User 2](./Images/target2.png) | ![Target User 3](./Images/target3.png) |
+|:---:|:---:|:---:|
+| *Fig 6. Individual reading fan* | *Fig 7. Family reading group* | *Fig 8. Remote reading friends* |
 
 - **Individual reading fan**: Individuals who wish to dedicate time to professional reading while being encouraged by a remote companion.
 - **Family reading group**: Families who want to build a reading habit together, allowing parents to virtually accompany their children even when apart.
@@ -66,6 +42,10 @@ LitMate is designed to respond to this pain point: by building digital interacti
 
 
 ## **2.Product Design**
+
+![Design Sketch](./Images/book2.png)
+<div style="text-align: center;">*Fig 9. Design Sketch*</div>
+
 
 ### 2.1 Design
 - **Design Sketchs**:
