@@ -19,43 +19,24 @@ LitMate is a smart book light that combines IoT technology and behavioural devel
 
 ### 1.2 Background
 
-<div style="display: flex; justify-content: space-between; margin: 20px 0;">
-  <div style="width: 23%; text-align: center;">
-    <img src="./Images/Circle.png" alt="Reading Cycle" width="100%">
-    <p><i>Fig 2. Reading Cycle</i></p>
-  </div>
-  <div style="width: 23%; text-align: center;">
-    <img src="./Images/Data.png" alt="Reading Statistics" width="100%">
-    <p><i>Fig 3. Reading Statistics</i></p>
-  </div>
-  <div style="width: 23%; text-align: center;">
-    <img src="./Images/Comparation.png" alt="Reading Comparison" width="100%">
-    <p><i>Fig 4. Comparison</i></p>
-  </div>
-  <div style="width: 23%; text-align: center;">
-    <img src="./Images/Distraction.png" alt="Reading with Peer Support" width="100%">
-    <p><i>Fig 5. Split Scene</i></p>
-  </div>
-</div>
+<img align="left" width="23%" src="./Images/Circle.png" alt="Reading Cycle" style="margin-right: 2%;">
+<img align="left" width="23%" src="./Images/Data.png" alt="Reading Statistics" style="margin-right: 2%;">
+<img align="left" width="23%" src="./Images/Comparation.png" alt="Reading Comparison" style="margin-right: 2%;">
+<img align="left" width="23%" src="./Images/Distraction.png" alt="Reading with Peer Support">
+<br clear="left"/>
 
-Many readers fall into a recurring cycle: setting goals, facing time constraints, giving up, regretting, and restarting. According to a 2019 Harris Poll, 81% of U.S. adults report not reading as much as they wish due to limited time. Behavioral research on the “false hope syndrome” explains this pattern of repeated failure and renewed intention (Polivy & Herman, 2002). Social support, such as reading with friends, significantly improves habit adherence—peer accountability increases consistency (Wing & Jeffery, 1999). Thus, integrating social mechanisms may effectively transform reading into a sustainable habit.
+*Fig 2. Reading Cycle* | *Fig 3. Reading Statistics* | *Fig 4. Comparison* | *Fig 5. Split Scene*
+
+Many readers fall into a recurring cycle: setting goals, facing time constraints, giving up, regretting, and restarting. According to a 2019 Harris Poll, 81% of U.S. adults report not reading as much as they wish due to limited time. Behavioral research on the "false hope syndrome" explains this pattern of repeated failure and renewed intention (Polivy & Herman, 2002). Social support, such as reading with friends, significantly improves habit adherence—peer accountability increases consistency (Wing & Jeffery, 1999). Thus, integrating social mechanisms may effectively transform reading into a sustainable habit.
 
 ### 1.3 Target Users
 
-<div style="display: flex; justify-content: space-between; margin: 20px 0;">
-  <div style="width: 30%; text-align: center;">
-    <img src="./Images/target1.png" alt="Target User 1" width="100%" style="margin-right: 10px">
-    <p><i>Fig 6. Individual reading fan</i></p>
-  </div>
-  <div style="width: 30%; text-align: center;">
-    <img src="./Images/target2.png" alt="Target User 2" width="100%" style="margin-right: 10px">
-    <p><i>Fig 7. Family reading group</i></p>
-  </div>
-  <div style="width: 30%; text-align: center;">
-    <img src="./Images/target3.png" alt="Target User 3" width="100%">
-    <p><i>Fig 8. Remote reading friends</i></p>
-  </div>
-</div>
+<img align="left" width="30%" src="./Images/target1.png" alt="Target User 1" style="margin-right: 3%;">
+<img align="left" width="30%" src="./Images/target2.png" alt="Target User 2" style="margin-right: 3%;">
+<img align="left" width="30%" src="./Images/target3.png" alt="Target User 3">
+<br clear="left"/>
+
+*Fig 6. Individual reading fan* | *Fig 7. Family reading group* | *Fig 8. Remote reading friends*
 
 - **Individual reading fan**: Individuals who wish to dedicate time to professional reading while being encouraged by a remote companion.
 - **Family reading group**: Families who want to build a reading habit together, allowing parents to virtually accompany their children even when apart.
