@@ -14,18 +14,57 @@
 <img align="left" width="300" src="./Images/book1.png" alt="Product demo of LitMate" style="margin-right: 30px"/>
 
 ### 1.1 Brief
-
-This book lamp redefines reading by bridging the gap between readers, no matter the distance. It automatically opens to begin your reading session, while the companion app lets you join remote reading groups for motivation and friendly competition.（介绍和灵感）
-
-Fig 1. Product demo of LitMate
-
+LitMate is a smart book light that combines IoT technology and behavioural development concepts，utilizing MQTT protocol to support the development of consistent reading habits. It enables remote users to share reading status for mutual companionship and accountability. The angle of the lamp's pages visualizes Pomodoro timing, while light effects indicate reading states. Paired with a dedicated app, LitMate offers device control, reading history tracking, and social features, forming a reading-centered digital community.
 <br clear="left"/>
 
 ### 1.2 Background
-In today's fast-paced life, many people struggle to balance reading and work. Traditional reading lights lack the ability to connect readers and create a shared reading experience. We believe that reading should not be a solitary activity - it can be more engaging and motivating when shared with others.（补充简单的二手调研）
 
-### 1.3 Motivation
-Our team aims to bridge reading friends through interactive features like tap gestures and reading progress sharing. By establishing a mechanism of mutual supervision and encouragement among reading partners, we hope to create a community with a vibrant reading atmosphere where one can easily find reading partners and stay motivated in their reading journey.（目标人群）
+<div style="display: flex; justify-content: space-between; margin: 20px 0;">
+  <div style="width: 23%; text-align: center;">
+    <img src="./Images/Circle.png" alt="Reading Cycle" width="100%">
+    <p><i>Fig 2. Reading Cycle</i></p>
+  </div>
+  <div style="width: 23%; text-align: center;">
+    <img src="./Images/Data.png" alt="Reading Statistics" width="100%">
+    <p><i>Fig 3. Reading Statistics</i></p>
+  </div>
+  <div style="width: 23%; text-align: center;">
+    <img src="./Images/Comparation.png" alt="Reading Comparison" width="100%">
+    <p><i>Fig 4. Comparison</i></p>
+  </div>
+  <div style="width: 23%; text-align: center;">
+    <img src="./Images/Distraction.png" alt="Reading with Peer Support" width="100%">
+    <p><i>Fig 5. Split Scene</i></p>
+  </div>
+</div>
+
+Many readers fall into a recurring cycle: setting goals, facing time constraints, giving up, regretting, and restarting. According to a 2019 Harris Poll, 81% of U.S. adults report not reading as much as they wish due to limited time. Behavioral research on the “false hope syndrome” explains this pattern of repeated failure and renewed intention (Polivy & Herman, 2002). Social support, such as reading with friends, significantly improves habit adherence—peer accountability increases consistency (Wing & Jeffery, 1999). Thus, integrating social mechanisms may effectively transform reading into a sustainable habit.
+
+### 1.3 Target Users
+
+<div style="display: flex; justify-content: space-between; margin: 20px 0;">
+  <div style="width: 30%; text-align: center;">
+    <img src="./Images/target1.png" alt="Target User 1" width="100%" style="margin-right: 10px">
+    <p><i>Fig 6. Individual reading fan</i></p>
+  </div>
+  <div style="width: 30%; text-align: center;">
+    <img src="./Images/target2.png" alt="Target User 2" width="100%" style="margin-right: 10px">
+    <p><i>Fig 7. Family reading group</i></p>
+  </div>
+  <div style="width: 30%; text-align: center;">
+    <img src="./Images/target3.png" alt="Target User 3" width="100%">
+    <p><i>Fig 8. Remote reading friends</i></p>
+  </div>
+</div>
+
+- **Individual reading fan**: Individuals who wish to dedicate time to professional reading while being encouraged by a remote companion.
+- **Family reading group**: Families who want to build a reading habit together, allowing parents to virtually accompany their children even when apart.
+
+- **Remote reading friends**: People who seek a shared experience despite being in different locations, making reading a form of remote interaction.
+
+In real life, reading is often a highly isolated behaviour. Most people usually read alone at home, lacking companionship and interaction with peers. In the long run, this isolation tends to lead to a decline in reading motivation and difficulty in maintaining the habit.
+
+LitMate is designed to respond to this pain point: by building digital interaction mechanisms and social connectivity features, it helps different types of users to gain a sense of companionship in reading. Specifically, LitMate aims to provide a sense of belonging to an online community for individual readers, and at the same time supports status synchronisation and real-time interaction between remote reading partners, alleviating the barrier brought about by physical distance. Through the combination of technology and emotion, LitMate aims to enhance the social connection during the reading process and promote the long-term sustainability of reading behaviour.
 
 
 ## **2.Product Design**
