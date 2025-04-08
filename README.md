@@ -2,18 +2,16 @@
   <img src="./Images/title.jpg" alt="LitMate" style="width: 100%; pointer-events: none;">
 </div>
 
-<a href="https://www.youtube.com/watch?v=BeWCd5zH7cs">
-  <img src="https://img.youtube.com/vi/BeWCd5zH7cs/0.jpg" alt="LitMate Demo Video" width="100%" style="width:100%;">
-</a>
+<iframe width="100%" height="450" src="https://www.youtube.com/embed/BeWCd5zH7cs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-🎥 Click the image above to watch [LitMate video](https://www.youtube.com/watch?v=BeWCd5zH7cs)
+🎥 Click the video above to watch [Your New Reading Partner](https://www.youtube.com/watch?v=BeWCd5zH7cs)
 
 
 ## **1.What is LitMate?**
 
-<img align="left" width="300" src="./Images/book1.png" alt="Product demo of LitMate" style="margin-right: 30px"/>
-
 ### 1.1 Brief
+
+<img align="left" width="300" src="./Images/book1.png" alt="Product demo of LitMate" style="margin-right: 30px"/>
 LitMate is a smart book light that combines IoT technology and behavioural development concepts，utilizing MQTT protocol to support the development of consistent reading habits. It enables remote users to share reading status for mutual companionship and accountability. The angle of the lamp's pages visualizes Pomodoro timing, while light effects indicate reading states. Paired with a dedicated app, LitMate offers device control, reading history tracking, and social features, forming a reading-centered digital community.
 <br clear="left"/>
 
@@ -41,26 +39,64 @@ In real life, reading is often a highly isolated behaviour. Most people usually 
 LitMate is designed to respond to this pain point: by building digital interaction mechanisms and social connectivity features, it helps different types of users to gain a sense of companionship in reading. Specifically, LitMate aims to provide a sense of belonging to an online community for individual readers, and at the same time supports status synchronisation and real-time interaction between remote reading partners, alleviating the barrier brought about by physical distance. Through the combination of technology and emotion, LitMate aims to enhance the social connection during the reading process and promote the long-term sustainability of reading behaviour.
 
 
-## **2.Product Design**
+## **2.Product Design to Fabrication**
 
 ![Design Sketch](./Images/book2.png)
-<div style="text-align: center;">*Fig 9. Design Sketch*</div>
+<p style="text-align: center;"><em>Fig 9. What LitMate looks like in your home.</em></p>
 
 
-### 2.1 Design
-- **Design Sketchs**:
+### 2.1 Design: Initial idea VS Final sketch
 
+<table>
+  <tr>
+    <td style="text-align: center;">
+      <img src="./Images/sketch.png" alt="Initial sketch" style="width: 400px;">
+      <p><em>Fig 10. Initial sketch</em></p>
+    </td>
+    <td style="text-align: center;">
+      <img src="./Images/finalsketch.jpg" alt="Final Sketch" style="width: 400px;">
+      <p><em>Fig 11. Final Sketch</em></p>
+    </td>
+  </tr>
+</table>
 
+At the outset of the design process, LitMate was envisioned as an "intelligent book"—a device that retained the physical form of a traditional book while integrating a smart display on the cover to show reading progress, battery level, and even celebratory animations such as a smiling face when users completed reading tasks.
+
+Like many product development journeys, LitMate evolved through iterative team discussions and trial-and-error. Early prototype testing revealed key hardware constraints, particularly the thickness of the servo motor, which limited the feasibility of a slimmer, book-like form factor. These insights prompted a refinement of the design concept.
+
+Subsequent sketches reflected a shift toward simplicity and feasibility. The team replaced the screen-based interface with a more streamlined solution: an LED light strip to represent reading progress and status. This change preserved the core interactive function while improving manufacturability and aligning better with user expectations for a clean, ambient reading experience.
+  
 ### 2.2 Enclousure
-- **3D Modeling**: Provides standard Pomodoro timing functionality with customizable work and rest cycles.
-- **Lasercutting**: Features adjustable brightness and color temperature to suit different reading needs.
-- **Material Selection**: Seamless integration with a user-friendly mobile app for remote control and settings management.
+#### 2.2.1 3D Modeling
+![Design Sketch](./Images/3Dmodel.png)
+<p style="text-align: center;"><em>Fig 12. 3Dmodeling in Rhino</em></p>
+By physically placing the necessary internal components, the team constructed a 3D model of the book-shaped enclosure using the Rhino modeling software. Through multiple iterations of prototyping, the layout of components and the dimensions of the shell were progressively refined to achieve an optimal balance between structural compactness and user usability.
+
+#### 2.2.2 Lasercutting
+![Design Sketch](./Images/lasercut.png)
+<p style="text-align: center;"><em>Fig 13. Lasercuting</em></p>
+After finalizing the product dimensions and hole placements, the 3D model was decomposed into 2D sheet components suitable for laser cutting. The DWG files were then imported into Illustrator for layout adjustments and detail refinement, and subsequently exported as PDF files for fabrication via laser cutting.
+
+#### 2.2.3 Material Selection
+![Design Sketch](./Images/Material.png)
+<p style="text-align: center;"><em>Fig 14. Material interation</em></p>
+
+- **Opal acrylic**: The initial material choice—opal acrylic—offered a clean and soft visual aesthetic, aligning well with the ambient nature of reading environments. However, as the design evolved, the team aimed to explore broader possibilities in color and material texture to enhance the product’s expressiveness and adaptability across different settings.
+- **UVprint on clear acrylic**: UV printing represented a promising material exploration, enabling enhanced visual expression through direct color and pattern application on one side of the acrylic sheet. This process creates a soft, diffused appearance on the opposite side and allows for high levels of customization. However, certain limitations emerged during testing: the printed layer is prone to peeling over time, and the printed surface does not adhere well to adhesives, thus constraining its use in structural assembly.
+- **Textured acrylic sheet**: In the final stage, the team sourced a selection of textured acrylic sheets from the [Etsy](https://www.etsy.com/uk/listing/882883609/incudo-golden-teal-smoky-acrylic-sheet?ref=yr_purchases) website. Although these materials involved relatively higher costs, their distinctive visual qualities contributed significantly to the product’s uniqueness and aesthetic appeal, reflecting a deliberate emphasis on design identity and material expressiveness.
 
 ### 2.3 Paper-folding
-- **First Attempt**: Provides standard Pomodoro timing functionality with customizable work and rest cycles.
-- **djAustable Book Light**: Features adjustable brightness and color temperature to suit different reading needs.
-- **Final Version**: Seamless integration with a user-friendly mobile app for remote control and settings management.
+![Design Sketch](./Images/folding.png)
+<p style="text-align: center;"><em>Fig 15. Paper folding</em></p>
 
+The origami-inspired structure underwent a major design transformation—from an initial fully folded configuration to a later approach utilizing edge adhesion. This modification significantly reduced the overall thickness, resulting in improved visual clarity and tactile performance during page unfolding and closing, thereby enhancing both usability and aesthetic quality.
+
+### 2.4 Assembling
+
+![Design Sketch](./Images/assembling.png)
+<p style="text-align: center;"><em>Fig 1. Assembling and interation</em></p>
+
+Throughout the development process, modeling refinements, cutting file adjustments, material selection, and origami structure iterations progressed in an interwoven and iterative manner. These design components informed and influenced one another, ultimately resulting in a structurally coherent, visually appealing, and fabrication-ready version that laid the foundation for the finalized product.
 
 ## **3.Hardware & Coding**
 
