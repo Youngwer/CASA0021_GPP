@@ -1,8 +1,6 @@
-<div style="text-align: center; margin-bottom: 20px;">
-  <img src="./Images/title.jpg" alt="LitMate" style="width: 100%; pointer-events: none;">
-</div>
-
-<iframe width="100%" height="450" src="https://www.youtube.com/embed/BeWCd5zH7cs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<a href="https://www.youtube.com/watch?v=BeWCd5zH7cs">
+  <img src="https://img.youtube.com/vi/BeWCd5zH7cs/0.jpg" alt="LitMate Demo Video" width="100%" style="width:100%;">
+</a>
 
 🎥 Click the video above to watch [Your New Reading Partner](https://www.youtube.com/watch?v=BeWCd5zH7cs)
 
@@ -38,11 +36,10 @@ In real life, reading is often a highly isolated behaviour. Most people usually 
 
 LitMate is designed to respond to this pain point: by building digital interaction mechanisms and social connectivity features, it helps different types of users to gain a sense of companionship in reading. Specifically, LitMate aims to provide a sense of belonging to an online community for individual readers, and at the same time supports status synchronisation and real-time interaction between remote reading partners, alleviating the barrier brought about by physical distance. Through the combination of technology and emotion, LitMate aims to enhance the social connection during the reading process and promote the long-term sustainability of reading behaviour.
 
-
-## **2.Product Design to Fabrication**
-
 ![Design Sketch](./Images/book2.png)
 <p style="text-align: center;"><em>Fig 9. What LitMate looks like in your home.</em></p>
+
+## **2.Product Design to Fabrication**
 
 
 ### 2.1 Design: Initial idea VS Final sketch
