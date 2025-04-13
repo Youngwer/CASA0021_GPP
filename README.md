@@ -508,8 +508,9 @@ For the purpose of simplifying the hardware assembly of the product as well as r
 
 <div style="text-align: center;">
     <img src="./PCB Design/Circuit diagram.png" alt="PCB Design" style="width: 80%;">
-    <img src="./PCB Design/PCB.png" alt="PCB Design" style="width: 80%;">
-    <p><em>Fig 33. PCB Design</em></p>
+    <img src="./PCB Design/PCB.png" alt="PCB Design" style="width: 30%;">
+    <p><em>Fig 33. Circuit diagram and PCB Design</em></p>
+Please refer to PCB folder for detailed design. The drawing tool used is EasyEDA.
 </div>
 
 ### 6.3 Application
