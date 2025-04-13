@@ -157,19 +157,20 @@ The WiFi configuration system implements a dual-mode approach to network connect
 
 When the device starts, it first attempts to connect to previously configured networks using credentials stored in non-volatile memory. If no stored credentials exist or the stored network is unavailable, the system will switch to Access Point mode, creating a hotspot named "ESP32-Config"providing a clean, responsive HTML interface accessible at http://192.168.4.1. The web interface (shown below) presents simplified form layout, clear input fields for SSID and password which can be accessed across both desktop and mobile devices. 
 
-<div style="text-align: center;">
-    <img src="./Images/web_interface.png" alt="Design Sketch">
-    <p><em>Fig 21. Simple Web interface</em></p>
+<div style="display: flex; justify-content: space-between;">
+    <div style="width: 48%;">
+        <img src="./Images/web_interface.png" alt="Design Sketch" style="width: 100%;">
+        <p style="text-align: center;"><em>Fig 21. Simple Web interface</em></p>
+    </div>
+    <div style="width: 48%;">
+        <img src="./Images/monitor.png" alt="Design Sketch" style="width: 100%;">
+        <p style="text-align: center;"><em>Fig 22. Serial monitor output during AP mode</em></p>
+    </div>
 </div>
 
 Once configured, the system maintains WiFi connectivity with automatic reconnection and fallback to AP mode when necessary. The serial monitor output (shown below) demonstrates the complete configuration process, from initiating AP mode to successfully connecting to the configured network.
 
-<div style="text-align: center;">
-    <img src="./Images/monitor.png" alt="Design Sketch">
-    <p><em>Fig 22. Serial monitor output during AP mode</em></p>
-</div>
-
-#### 4.2.2 MQTT Communication
+### 4.2.2 MQTT Communication
 LitMate system leverages MQTT protocol for reliable real-time communication between paired devices. MQTT is featured for its lightweight nature, publish-subscribe model, and excellent performance on constrained networks.
 
 #### 4.2.3 Topic Structure
@@ -200,29 +201,31 @@ Therefore, this lightweight communication framework enables the paired LitMate d
 ### 4.3 Core Reading Functionality
 The core of LitMate's functionality revolves around its ability to physically interact with books, track reading sessions, and provide visual feedback through an integrated system of hardware control and state management.
 
-#### 4.3.1 Book State Control
+#### 4.3.1 Pomodoro Timer 
+The LitMate device incorporates a sophisticated Pomodoro timer that combines time tracking with physical visualization through servo motor positioning.
 
-##### Servo Motor Control for Physical Book Opening/Closing
-LitMate uses a dual-servo mechanism to physically open and close the book holder, creating a tangible representation of reading status. The system employs the ESP32Servo library to manage precision movement:
+The Pomodoro functions are tightly integrated with the book state management system: When book is open, it start working, set an hour Pomodoro timer; When the full one-hour session completes, it triggers the book closure mechanism.
+
+##### Servo Angle as Visual Progress Indicator
+Another feature of LitMate's Pomodoro is the use of servo angle position as a physical progress indicator. As reading time advances, the servo motors adjust their position in 15-degree increments:
 
 ```cpp
-// Open the book (gradually move servos to open position)
-void openBook() {
-    Serial.println("Opening the book...");
-    // From current position to 180 degrees
-    moveServos(currentServo1Angle, 180, 5, 100);
-    Serial.println("Book is open!");
-}
-// Close the book (gradually move servos from current position to closed position)
-void closeBook() {
-    Serial.println("Closing the book...");
-    // From current position to 0 degrees
-    moveServos(currentServo1Angle, 0, -5, 100);
-    Serial.println("Book is closed!");
-}
+if (currentStage != lastServoStage) {
+        // Calculate new servo position: starting from 180 degrees, decreasing by 15 degrees per stage
+        int targetPosition = 180 - (currentStage * DEGREES_PER_STAGE);
+        
+        // Smoothly move to the new position
+        moveServosSmooth(180 - (lastServoStage * DEGREES_PER_STAGE), 
+                          targetPosition, 
+                          (lastServoStage < currentStage) ? 5 : -5, 
+                          50);
+        
+        lastServoStage = currentStage;
+    }
+
 ```
 
-##### Button Interaction Logic (Short Press vs. Long Press)
+#### 4.3.2 Button Interaction Logic (Short Press vs. Long Press)
 The system uses a single button interface with differentiated press durations to control multiple functions. The button handler utilise debouncing and timing mechanisms to distinguish between short and long presses:
 - **Short Press**: Toggles the progress indicator LEDs on/off.
 - **Long Press (for more than 3 seconds)**: Toggles the book's open/closed state.
@@ -266,10 +269,6 @@ void checkButton() {
 }
 ```
 
-#### 4.3.2 Reading Time Tracking System
-  Reading time tracking system monitors both individual reading sessions and cumulative daily reading time, which enables users to track their reading habits with precision and synchronizes this data with paired devices.
-
-
 #### 4.3.3 Session-based and Cumulative Time Tracking
 The system can distinguish between active reading sessions and cumulative daily reading time. When the book is opened, a new reading session begins. The system uses the millis() function to track time and records the start time and begins tracking the session duration. When the book is closed, the session duration is calculated and added to the cumulative daily reading time. This approach allows the system to maintain accurate time records even through multiple reading sessions throughout the day. The related code is shown below:
 ```cpp
@@ -303,29 +302,7 @@ void stopReadingTimer() {
 #### 4.3.4 Daily Reading Reset Mechanism
 When a new day begins, the system logs the previous day's total reading time, resets the counter, and publishes the updated state to the MQTT network to ensure paired devices are synchronized.
 
-#### 4.3.5 Pomodoro Timer Integration
-The LitMate device incorporates a sophisticated Pomodoro timer that combines time tracking with physical visualization through servo motor positioning.
 
-The Pomodoro functions are tightly integrated with the book state management system: When book is open, it start working, set an hour Pomodoro timer; When the full one-hour session completes, it triggers the book closure mechanism.
-
-##### Servo Angle as Visual Progress Indicator
-Another feature of LitMate's Pomodoro is the use of servo angle position as a physical progress indicator. As reading time advances, the servo motors adjust their position in 15-degree increments:
-
-```cpp
-if (currentStage != lastServoStage) {
-        // Calculate new servo position: starting from 180 degrees, decreasing by 15 degrees per stage
-        int targetPosition = 180 - (currentStage * DEGREES_PER_STAGE);
-        
-        // Smoothly move to the new position
-        moveServosSmooth(180 - (lastServoStage * DEGREES_PER_STAGE), 
-                          targetPosition, 
-                          (lastServoStage < currentStage) ? 5 : -5, 
-                          50);
-        
-        lastServoStage = currentStage;
-    }
-
-```
 
 ### 4.4 User Interaction and Data Visualisation
 
@@ -373,6 +350,9 @@ if (tapInterval > minTapInterval && tapInterval < doubleTapWindow) {
 
 ```
 This color change is synchronized between paired devices, creating a shared visual experience between remote users.
+
+
+
 
 #### 4.4.2 Progress Indicator LEDs
 
