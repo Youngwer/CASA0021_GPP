@@ -1,4 +1,4 @@
-<img src="./Images/Ttitle2.jpg" alt="LitMate Title" width="100%" style="width:100%;">
+<img src="./Images/Title3.png" alt="LitMate Title" width="100%" style="width:100%;">
 
 <a href="https://www.youtube.com/watch?v=BeWCd5zH7cs">
   <img src="https://img.youtube.com/vi/BeWCd5zH7cs/0.jpg" alt="LitMate Demo Video" width="100%" style="width:100%;">
@@ -23,26 +23,31 @@ LitMate is a smart book light that combines IoT technology and behavioural devel
 
 Many readers fall into a recurring cycle: setting goals, facing time constraints, giving up, regretting, and restarting. According to a 2019 Harris Poll, 81% of U.S. adults report not reading as much as they wish due to limited time. Behavioral research on the "false hope syndrome" explains this pattern of repeated failure and renewed intention (Polivy & Herman, 2002). Social support, such as reading with friends, significantly improves habit adherence—peer accountability increases consistency (Wing & Jeffery, 1999). Thus, integrating social mechanisms may effectively transform reading into a sustainable habit.
 
+### 1.3 Motivation
 
+<img src="./Images/connect.png" alt="Design Sketch">
+<p style="text-align: center;"><em>Fig 6. How to connect distant readers</em></p>
+
+Reading often becomes an isolated activity, undermining motivation and habit formation. LitMate addresses this by offering digital interaction and social features, giving readers a sense of community and real-time connection—even across distances. Through combined technology and emotional support, LitMate aims to foster social bonds and sustain long-term reading.
+
+
+![Design Sketch](./Images/book2.png)
+<p style="text-align: center;"><em>Fig 7. What LitMate looks like in your home.</em></p>
 
 # **2.Overall Design**
 ### 2.1 Target Users
 
 | ![Target User 1](./Images/target1.png) | ![Target User 2](./Images/target2.png) | ![Target User 3](./Images/target3.png) |
 |:---:|:---:|:---:|
-| *Fig 6. Individual reading fan* | *Fig 7. Family reading group* | *Fig 8. Remote reading friends* |
+| *Fig 8. Individual reading fan* | *Fig 9. Family reading group* | *Fig 10. Remote reading friends* |
 
 - **Individual reading fan**: Individuals who wish to dedicate time to professional reading while being encouraged by a remote companion.
 - **Family reading group**: Families who want to build a reading habit together, allowing parents to virtually accompany their children even when apart.
 
 - **Remote reading friends**: People who seek a shared experience despite being in different locations, making reading a form of remote interaction.
 
-In real life, reading is often a highly isolated behaviour. Most people usually read alone at home, lacking companionship and interaction with peers. In the long run, this isolation tends to lead to a decline in reading motivation and difficulty in maintaining the habit.
 
-LitMate is designed to respond to this pain point: by building digital interaction mechanisms and social connectivity features, it helps different types of users to gain a sense of companionship in reading. Specifically, LitMate aims to provide a sense of belonging to an online community for individual readers, and at the same time supports status synchronisation and real-time interaction between remote reading partners, alleviating the barrier brought about by physical distance. Through the combination of technology and emotion, LitMate aims to enhance the social connection during the reading process and promote the long-term sustainability of reading behaviour.
 
-![Design Sketch](./Images/book2.png)
-<p style="text-align: center;"><em>Fig 9. What LitMate looks like in your home.</em></p>
 
 
 ### 2.2 ServiceBluprint: How does LitMate work throughout its lifecycle?
@@ -58,22 +63,20 @@ This service blueprint reveals all the touchpoints of user interactions from fol
   <tr>
     <td style="text-align: center;">
       <img src="./Images/sketch.png" alt="Initial sketch" style="width: 400px;">
-      <p><em>Fig 10. Initial sketch</em></p>
+      <p><em>Fig 11. Initial sketch</em></p>
     </td>
     <td style="text-align: center;">
-      <img src="./Images/finalsketch.jpg" alt="Final Sketch" style="width: 400px;">
-      <p><em>Fig 11. Final Sketch</em></p>
+      <img src="./Images/finalsketch.png" alt="Final Sketch" style="width: 400px;">
+      <p><em>Fig 12. Final Sketch</em></p>
     </td>
   </tr>
 </table>
 
-At the outset of the design process, LitMate was envisioned as an "intelligent book"—a device that retained the physical form of a traditional book while integrating a smart display on the cover to show reading progress, battery level, and even celebratory animations such as a smiling face when users completed reading tasks.
-
-Like many product development journeys, LitMate evolved through iterative team discussions and trial-and-error. Early prototype testing revealed key hardware constraints, particularly the thickness of the servo motor, which limited the feasibility of a slimmer, book-like form factor. These insights prompted a refinement of the design concept.
-
-Subsequent sketches reflected a shift toward simplicity and feasibility. The team replaced the screen-based interface with a more streamlined solution: an LED light strip to represent reading progress and status. This change preserved the core interactive function while improving manufacturability and aligning better with user expectations for a clean, ambient reading experience.
+Initially conceived as an "intelligent book" with a smart display on the cover for reading progress and celebratory animations, LitMate's design evolved through iterative testing. Hardware constraints—particularly the servo motor's thickness—made a slimmer book-like form factor unfeasible. In response, the team replaced the screen-based interface with a simpler LED light strip, maintaining core interactivity while improving manufacturability and providing a clean, ambient reading experience.
 
 # **3.Physical Devices & Fabrication**
+<img src="./Images/hardwareselection.png" alt="Hardware Components">
+<p style="text-align: center;"><em>Fig 13. Hardware components selection</em></p>
 
 ### 3.1 Hardware Selection
 The hardware selection was based on the need to create an interactive, remote-synchronized reading lamp that could effectively communicate user progress and status. The following components were chosen:
@@ -81,9 +84,9 @@ The hardware selection was based on the need to create an interactive, remote-sy
 - **ESP32**: Acts as the central controller, supporting WiFi and MQTT communication for remote synchronization.
 - **SW420 Vibration Sensor**: Used to detect light touches, allowing users to interact with the lamp and change the lighting state.
 - **Servo Motors (x2)**: Responsible for controlling the book's opening and closing mechanism.
-- **LED Strips (4 sections, 8 LEDs each)**: Seamless integration with a user-friendly mobile app for remote control and settings management.
-- **Button Switch (4 sections, 8 LEDs each)**: Used for different interactions—short press for progress display and long press for power control.
-- **Separate Power Supply**: Added to ensure stable operation, avoiding power shortages.
+- **WS2812B LED Strips (4 sections, 8 LEDs each)**: Seamless integration with a user-friendly mobile app for remote control and settings management.
+- **Button Switch (4 sections, 8 LEDs each)**: Momentary stainless steel push button, used for different interactions—short press for progress display and long press for power control
+- **Separate Power Supply**: 4 x AA 6V battery holder case, added to ensure stable operation, avoiding power shortages.
 
 The selection of these components balances simplicity and functionality while ensuring the device can accurately track reading progress and provide intuitive feedback.
 
@@ -91,32 +94,32 @@ The selection of these components balances simplicity and functionality while en
 ### 3.2 Enclousure
 #### 3.2.1 3D Modeling
 ![Design Sketch](./Images/3Dmodel.png)
-<p style="text-align: center;"><em>Fig 12. 3Dmodeling in Rhino</em></p>
+<p style="text-align: center;"><em>Fig 14. 3Dmodeling in Rhino</em></p>
 By physically placing the necessary internal components, the team constructed a 3D model of the book-shaped enclosure using the Rhino modeling software. Through multiple iterations of prototyping, the layout of components and the dimensions of the shell were progressively refined to achieve an optimal balance between structural compactness and user usability.
 
 #### 3.2.2 Lasercutting
 ![Design Sketch](./Images/lasercut.png)
-<p style="text-align: center;"><em>Fig 13. Lasercuting</em></p>
+<p style="text-align: center;"><em>Fig 15. Lasercuting</em></p>
 After finalizing the product dimensions and hole placements, the 3D model was decomposed into 2D sheet components suitable for laser cutting. The DWG files were then imported into Illustrator for layout adjustments and detail refinement, and subsequently exported as PDF files for fabrication via laser cutting.
 
 #### 3.2.3 Material Selection
 ![Design Sketch](./Images/Material.png)
-<p style="text-align: center;"><em>Fig 14. Material interation</em></p>
+<p style="text-align: center;"><em>Fig 16. Material interation</em></p>
 
-- **Opal acrylic**: The initial material choice—opal acrylic—offered a clean and soft visual aesthetic, aligning well with the ambient nature of reading environments. However, as the design evolved, the team aimed to explore broader possibilities in color and material texture to enhance the product's expressiveness and adaptability across different settings.
-- **UVprint on clear acrylic**: UV printing represented a promising material exploration, enabling enhanced visual expression through direct color and pattern application on one side of the acrylic sheet. This process creates a soft, diffused appearance on the opposite side and allows for high levels of customization. However, certain limitations emerged during testing: the printed layer is prone to peeling over time, and the printed surface does not adhere well to adhesives, thus constraining its use in structural assembly.
-- **Textured acrylic sheet**: In the final stage, the team sourced a selection of textured acrylic sheets from the [Etsy](https://www.etsy.com/uk/listing/882883609/incudo-golden-teal-smoky-acrylic-sheet?ref=yr_purchases) website. Although these materials involved relatively higher costs, their distinctive visual qualities contributed significantly to the product's uniqueness and aesthetic appeal, reflecting a deliberate emphasis on design identity and material expressiveness.
+- **Opal acrylic**: Opal acrylic offered a clean, soft aesthetic suited to reading environments. However, as the design evolved, the team sought broader color and texture options to enhance expressiveness and adaptability.
+- **UVprint on clear acrylic**: UV printing allowed for rich visual expression by applying color and patterns to one side of the acrylic, producing a soft, diffused look on the opposite side. However, testing revealed peeling over time and poor adhesive compatibility, limiting its structural use.
+- **Textured acrylic sheet**: In the final stage, the team chose textured acrylic sheets from [Etsy](https://www.etsy.com/uk/listing/882883609/incudo-golden-teal-smoky-acrylic-sheet?ref=yr_purchases) website for their distinctive visual qualities and emphasis on design identity, despite higher costs.
 
 ### 3.3 Paper-folding
 ![Design Sketch](./Images/folding.png)
-<p style="text-align: center;"><em>Fig 15. Paper folding</em></p>
+<p style="text-align: center;"><em>Fig 17. Paper folding</em></p>
 
 The origami-inspired structure underwent a major design transformation—from an initial fully folded configuration to a later approach utilizing edge adhesion. This modification significantly reduced the overall thickness, resulting in improved visual clarity and tactile performance during page unfolding and closing, thereby enhancing both usability and aesthetic quality.
 
 ### 3.4 Assembling
 
 ![Design Sketch](./Images/assembling.png)
-<p style="text-align: center;"><em>Fig 1. Assembling and interation</em></p>
+<p style="text-align: center;"><em>Fig 18. Assembling and interation</em></p>
 
 Throughout the development process, modeling refinements, cutting file adjustments, material selection, and origami structure iterations progressed in an interwoven and iterative manner. These design components informed and influenced one another, ultimately resulting in a structurally coherent, visually appealing, and fabrication-ready version that laid the foundation for the finalized product.
 
@@ -125,7 +128,7 @@ Throughout the development process, modeling refinements, cutting file adjustmen
 # **4.Functional implementation and Programming**
 <div style="text-align: center;">
     <img src="./Images/arch.png" alt="Design Sketch">
-    <p><em>Fig 16. System architecture</em></p>
+    <p><em>Fig 19. System architecture</em></p>
 </div>
 
 
@@ -148,21 +151,21 @@ The WiFi configuration system implements a dual-mode approach to network connect
 
 <div style="text-align: center;">
     <img src="./Images/flow.png" alt="Design Sketch">
-    <p><em>Fig 17. System architecture</em></p>
+    <p><em>Fig 20. System architecture</em></p>
 </div>
 
 When the device starts, it first attempts to connect to previously configured networks using credentials stored in non-volatile memory. If no stored credentials exist or the stored network is unavailable, the system will switch to Access Point mode, creating a hotspot named "ESP32-Config"providing a clean, responsive HTML interface accessible at http://192.168.4.1. The web interface (shown below) presents simplified form layout, clear input fields for SSID and password which can be accessed across both desktop and mobile devices. 
 
 <div style="text-align: center;">
     <img src="./Images/web_interface.png" alt="Design Sketch">
-    <p><em>Fig 17. Simple Web interface</em></p>
+    <p><em>Fig 21. Simple Web interface</em></p>
 </div>
 
 Once configured, the system maintains WiFi connectivity with automatic reconnection and fallback to AP mode when necessary. The serial monitor output (shown below) demonstrates the complete configuration process, from initiating AP mode to successfully connecting to the configured network.
 
 <div style="text-align: center;">
     <img src="./Images/monitor.png" alt="Design Sketch">
-    <p><em>Fig 17. Serial monitor output during AP mode</em></p>
+    <p><em>Fig 22. Serial monitor output during AP mode</em></p>
 </div>
 
 #### 4.2.2 MQTT Communication
@@ -186,7 +189,7 @@ Each device subscribes to the other device's topics to maintain awareness of its
 
 <div style="text-align: center;">
     <img src="./Images/sub.png" alt="Design Sketch">
-    <p><em>Fig 17. Serial monitor output during AP mode</em></p>
+    <p><em>Fig 23. Serial monitor output during AP mode</em></p>
 </div>
 
 When significant state changes occur (book opening/closing, touch interaction, light color change), the device immediately publishes updates to the appropriate topics. The MQTT client maintains persistent connections with automatic reconnection mechanisms to ensure connected devices receive the latest state information.
@@ -421,7 +424,7 @@ The mobile application aims to provide users with a simple reading record and re
 
 <div style="text-align: center;">
     <img src="./Images/5.2.1.png" alt="Recording reading time and pages interface" style="width: 100%;">
-    <p><em>Fig 22. Interface for recording reading time and pages</em></p>
+    <p><em>Fig 24. Interface for recording reading time and pages</em></p>
 </div>
 
 - Click on the 'Goal' button and select the goal for today's reading time in the pop-up window.
@@ -435,7 +438,7 @@ The mobile application aims to provide users with a simple reading record and re
 
 <div style="text-align: center;">
     <img src="./Images/5.2.2.png" alt="Reading statistics overview" style="width: 100%;">
-    <p><em>Fig 23. Reading statistics overview showing weekly, monthly, and yearly views with time selection</em></p>
+    <p><em>Fig 25. Reading statistics overview showing weekly, monthly, and yearly views with time selection</em></p>
 </div>
 
 - Click on 'Recent Reading' on the homepage to go to the statistics page. 
@@ -446,7 +449,7 @@ The mobile application aims to provide users with a simple reading record and re
 
 <div style="text-align: center;">
     <img src="./Images/5.2.3.png" alt="Personal library interface" style="width: 80%;">
-    <p><em>Fig 24. Personal library interface showing book collection with progress bars</em></p>
+    <p><em>Fig 26. Personal library interface showing book collection with progress bars</em></p>
 </div>
 
 - The book cards on the Library page show each book's cover, title, author, and current reading progress bar.
@@ -457,7 +460,7 @@ The mobile application aims to provide users with a simple reading record and re
 Click the plus sign on the Group page to create a new group, and enter the group information in the pop-up window.
 <div style="text-align: center;">
     <img src="./Images/group.png" alt="Group Photo" style="width: 80%;">
-    <p><em>Fig 29. Group Photo</em></p>
+    <p><em>Fig 27. Group Photo</em></p>
 </div>
 
 
@@ -476,28 +479,39 @@ Click on each Group card to see more information about the group, including the 
 
 <div style="text-align: center;">
     <img src="./Images/app_sketch.png" alt="App interface sketch" style="width: 100%;">
-    <p><em>Fig 25. Initial sketches of the app interface design</em></p>
+    <p><em>Fig 29. Initial sketches of the app interface design</em></p>
 </div>
 
 #### 5.3.2 Prototype
 
 <div style="text-align: center;">
     <img src="./Images/app_prototype.png" alt="App interface prototype" style="width: 100%;">
-    <p><em>Fig 26. High-fidelity prototype of the app interface</em></p>
+    <p><em>Fig 30. High-fidelity prototype of the app interface</em></p>
 </div>
 
 #### 5.3.3 Current Development
 
 <div style="text-align: center;">
     <img src="./Images/app_development.png" alt="Current app development" style="width: 100%;">
-    <p><em>Fig 27. Current development status of the app interface</em></p>
+    <p><em>Fig 31. Current development status of the app interface</em></p>
 </div>
 
 
 
-# **6. Limitations & Future**
+# **6. Limitations & Future development**
+### 6.1 More Possibilities in Design
 
-### 6.1 Circuit Assembly and Challenges
+<div style="text-align: center;">
+    <img src="./Images/futuresketch.jpg" alt="Future Design Possibilities" style="width: 80%;">
+    <p><em>Fig 32. Future Design Possibilities</em></p>
+</div>
+Some of the advice about the product gained during the pitch made the team rethink about product design.
+
+- **Size**: The team tends to reduce the size of the product in the next iteration by upgrading the hardware to make it more write and easy to use. In fact, the current product still has a lot of free space inside.
+- **Visualisation**: For visualisation, the team preferred to make another prototype where the pages of the book could be opened from each side to represent the reading progress of both sides for a more intuitive comparison.
+
+### 6.2 How to Improve Hardware of LitMate?
+#### 6.2.1 Circuit Assembly and Challenges
 The circuit was designed to be straightforward, focusing on ease of connection. However, the symmetrical layout made wiring more complex, leading to issues in organization and debugging. The key challenges faced during assembly were:
 - **Complex Wiring Layout**: The symmetrical arrangement of components made routing difficult, increasing the risk of loose connections.
 - **Power Supply Limitations**: The initial single power source was insufficient for stable operation, especially when driving multiple LEDs and servos.
@@ -507,18 +521,22 @@ To address these issues, some measures were taken :
 1) Simplified the routing layout, reducing unnecessary wiring complexity.
 2) Implemented a separate power supply, ensuring adequate power distribution.
 3) Adjusted the sensitivity threshold of the SW420 sensor to improve its reliability.
-  
-### 6.2 Application
+
+#### 6.2.2 PCB Design
+For the purpose of simplifying the hardware assembly of the product as well as reducing the size of the product. Designing a dedicated PCB is an ideal ending solution and the team has made the following attempts so far:
+
+<div style="text-align: center;">
+    <img src="./PCB Design/PCB.png" alt="PCB Design" style="width: 80%;">
+    <p><em>Fig 33. PCB Design</em></p>
+</div>
+
+### 6.3 Application
 
 The current APP is limited to Android mobile phones and has not yet been linked to a physical book light, which could be developed in both directions in future developments and iterations: 
 1) Develop different versions of the app for Android and IOS phones; 
 2) Implement a digital twin between mobile application and physical book light, allowing users to control the book light on/off and synchronise the reading time recorded by the book light in the application.
 
 
-
-# **7. Contributing Team**
-
-
-# **8. Reference**
+# **7. Reference**
 
 
