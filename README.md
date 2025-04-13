@@ -507,6 +507,7 @@ To address these issues, some measures were taken :
 For the purpose of simplifying the hardware assembly of the product as well as reducing the size of the product. Designing a dedicated PCB is an ideal ending solution and the team has made the following attempts so far:
 
 <div style="text-align: center;">
+    <img src="./PCB Design/Circuit diagram.png" alt="PCB Design" style="width: 80%;">
     <img src="./PCB Design/PCB.png" alt="PCB Design" style="width: 80%;">
     <p><em>Fig 33. PCB Design</em></p>
 </div>
