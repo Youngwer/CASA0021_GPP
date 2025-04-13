@@ -538,5 +538,6 @@ The current APP is limited to Android mobile phones and has not yet been linked 
 
 
 # **7. Reference**
-
-
+1) Polivy, J., & Herman, C. P. (2002). If at First You Don’t Succeed: False Hopes of Self-Change. American Psychologist, 57(9), 677–689. https://doi.org/10.1037/0003-066X.57.9.677
+2) Harris Poll (2019). Reading Habits Survey, conducted for Scribd. Summary available via Mental Floss by Garin Pirnia: 81% of people don’t read as much as they want
+3) Wing, R. R., & Jeffery, R. W. (1999). Benefits of recruiting participants with friends and increasing social support for weight loss and maintenance. Journal of Consulting and Clinical Psychology, 67(1), 132–138. https://doi.org/10.1037/0022-006X.67.1.132
