@@ -91,6 +91,7 @@ The hardware selection was based on the need to create an interactive, remote-sy
 The selection of these components balances simplicity and functionality while ensuring the device can accurately track reading progress and provide intuitive feedback.
 
 
+
 ### 3.2 Enclousure
 #### 3.2.1 3D Modeling
 ![Design Sketch](./Images/3Dmodel.png)
@@ -536,8 +537,25 @@ The current APP is limited to Android mobile phones and has not yet been linked 
 1) Develop different versions of the app for Android and IOS phones; 
 2) Implement a digital twin between mobile application and physical book light, allowing users to control the book light on/off and synchronise the reading time recorded by the book light in the application.
 
+### 6.4 Marketisation：Inability to finally recognise costs
+Below are the current individual equipment costing：
+
+| Component | Quantity | Subtotal (GBP) | Estimated Cost (GBP) | Notes |
+|-----------|----------|---------------|---------------------|-------|
+| ESP32 Development Board | 1 | £5.5-£8.8 | £7.2 | Main controller |
+| SW420 Vibration Sensor | 1 | £0.55-£1.1 | £0.8 | For touch detection |
+| Servo Motor | 2 | £3.3-£5.5 | £4.4 | Controls book opening/closing |
+| WS2812B LED Strip | 4 segments (8 LEDs each) | £8.8-£13.2 | £11.0 | For status display |
+| Push Button | 1 | £0.22-£0.55 | £0.4 | Stainless steel button |
+| 4xAA Battery Holder | 1 | £0.55-£1.1 | £0.8 | 6V power supply |
+| Acrylic Enclosure | - | £5.5-£11 | £8.3 | Including laser cutting cost |
+| Other Components (Wires, Resistors, etc.) | - | £2.2-£3.3 | £2.8 | Basic electronic components |
+| **Total** | - | **£26.6-£44.5** | **£35.7** | - |
+
+
+The ultimate goal of the product is to sell it on kickstater, so the cost and selling price need to be considered, but there are two uncertainties at the moment: the **paper-folding work** needs to seek cooperation from manufacturers for mass production, and the **subsequent development and maintenance costs of the APP**.
 
 # **7. Reference**
-1) Polivy, J., & Herman, C. P. (2002). If at First You Don’t Succeed: False Hopes of Self-Change. American Psychologist, 57(9), 677–689. https://doi.org/10.1037/0003-066X.57.9.677
-2) Harris Poll (2019). Reading Habits Survey, conducted for Scribd. Summary available via Mental Floss by Garin Pirnia: 81% of people don’t read as much as they want
+1) Polivy, J., & Herman, C. P. (2002). If at First You Don't Succeed: False Hopes of Self-Change. American Psychologist, 57(9), 677–689. https://doi.org/10.1037/0003-066X.57.9.677
+2) Harris Poll (2019). Reading Habits Survey, conducted for Scribd. Summary available via Mental Floss by Garin Pirnia: 81% of people don't read as much as they want
 3) Wing, R. R., & Jeffery, R. W. (1999). Benefits of recruiting participants with friends and increasing social support for weight loss and maintenance. Journal of Consulting and Clinical Psychology, 67(1), 132–138. https://doi.org/10.1037/0022-006X.67.1.132
