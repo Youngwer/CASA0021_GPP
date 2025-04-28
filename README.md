@@ -141,52 +141,348 @@ Team members:
     <img src="./Images/arch.png" alt="System Architecture">
 </div>
 
-The system is built with a modular design architecture divided into four distinct layers:
+When significant state changes occur (book opening/closing, touch interaction, light color change), the device immediately publishes updates to the appropriate topics. The MQTT client maintains persistent connections with automatic reconnection mechanisms to ensure connected devices receive the latest state information.
 
-1. **Core Configuration** (`config.h`): Centralizes system constants and pin definitions
-2. **Network Layer**: Handles WiFi connectivity and MQTT communication
-3. **Hardware Control Layer**: Manages physical components (servos, LEDs, sensors)
-4. **Feature Layer**: Implements high-level functionality (timers, user interactions)
+Therefore, this lightweight communication framework enables the paired LitMate devices to maintain synchronized state and respond to each other's actions in real-time within seconds.
 
-### Code Structure
+### 4.3 Core Reading Functionality
+The core of LitMate's functionality revolves around its ability to physically interact with books, track reading sessions, and provide visual feedback through an integrated system of hardware control and state management.
+
+#### 4.3.1 Pomodoro Timer 
+The LitMate device incorporates a sophisticated Pomodoro timer that combines time tracking with physical visualization through servo motor positioning.
+
+The Pomodoro functions are tightly integrated with the book state management system: When book is open, it start working, set an hour Pomodoro timer; When the full one-hour session completes, it triggers the book closure mechanism.
+
+##### Servo Angle as Visual Progress Indicator
+Another feature of LitMate's Pomodoro is the use of servo angle position as a physical progress indicator. As reading time advances, the servo motors adjust their position in 15-degree increments:
+
+```cpp
+if (currentStage != lastServoStage) {
+        // Calculate new servo position: starting from 180 degrees, decreasing by 15 degrees per stage
+        int targetPosition = 180 - (currentStage * DEGREES_PER_STAGE);
+        
+        // Smoothly move to the new position
+        moveServosSmooth(180 - (lastServoStage * DEGREES_PER_STAGE), 
+                          targetPosition, 
+                          (lastServoStage < currentStage) ? 5 : -5, 
+                          50);
+        
+        lastServoStage = currentStage;
+    }
 
 ```
-Arduino/
-├── LitMate.ino           # Main sketch file
-├── arduino_secrets.h     # WiFi and MQTT credentials (create from template)
-├── button_handler.h      # Button input handling
-├── config.h              # Pin definitions and constants
-├── led_controller.h      # LED control functions
-├── mqtt_handler.h        # MQTT communication
-├── pomodoro_timer.h      # Pomodoro timing functionality
-├── reading_timer.h       # Reading session tracking
-├── servo_controller.h    # Book movement control
-├── vibration_sensor.h    # Touch detection
-└── wifi_manager.h        # WiFi connection management
+
+#### 4.3.2 Button Interaction Logic (Short Press vs. Long Press)
+The system uses a single button interface with differentiated press durations to control multiple functions. The button handler utilise debouncing and timing mechanisms to distinguish between short and long presses:
+- **Short Press**: Toggles the progress indicator LEDs on/off.
+- **Long Press (for more than 3 seconds)**: Toggles the book's open/closed state.
+
+```cpp
+// Function to check button status
+void checkButton() {
+    // Read button state (LOW means pressed)
+    int buttonState = digitalRead(BUTTON_PIN);
+    
+    // Button pressed
+    if (buttonState == LOW && !buttonPressed) {
+        buttonPressed = true;
+        buttonPressTime = millis();
+        longPressTriggered = false;
+    } 
+    
+    // Button held down, check if long press duration is reached
+    else if (buttonState == LOW && buttonPressed) {
+        unsigned long pressDuration = millis() - buttonPressTime;
+        
+        // Long press duration reached and long press action not yet triggered
+        if (pressDuration >= LONG_PRESS_TIME && !longPressTriggered) {
+            toggleBook();         // Toggle the book's open/close status
+            longPressTriggered = true;
+            Serial.println("Long press detected, toggling book status");
+        }
+    }
+    // Button released
+    else if (buttonState == HIGH && buttonPressed) {
+        unsigned long pressDuration = millis() - buttonPressTime;
+        buttonPressed = false;
+        
+        // Short press - control LED lights
+        if (pressDuration < LONG_PRESS_TIME && !longPressTriggered) {
+            toggleLEDs();
+            Serial.println("Short press detected, toggling LED status");
+        }
+        longPressTriggered = false;
+    }
+}
 ```
 
-### Key Implementation Features
+#### 4.3.3 Session-based and Cumulative Time Tracking
+The system can distinguish between active reading sessions and cumulative daily reading time. When the book is opened, a new reading session begins. The system uses the millis() function to track time and records the start time and begins tracking the session duration. When the book is closed, the session duration is calculated and added to the cumulative daily reading time. This approach allows the system to maintain accurate time records even through multiple reading sessions throughout the day. The related code is shown below:
+```cpp
+// Start reading timer
+void startReadingTimer() {
+    startTime = millis();
+    lastUpdateTime = startTime;
+    Serial.println("Reading session started!");
+    
+    // Publish reading status to MQTT
+    publishReadingStatus(true, dailyReadingTime);
+}
+// Stop reading timer
+void stopReadingTimer() {
+    if (startTime > 0) {
+        unsigned long sessionTime = millis() - startTime;
+        dailyReadingTime += sessionTime;
+        Serial.print("Reading session ended. Session time: ");
+        printTime(sessionTime);
+        Serial.print("Total daily reading time: ");
+        printTime(dailyReadingTime);
+        
+        // Publish reading status to MQTT
+        publishReadingStatus(false, dailyReadingTime);
+        
+        startTime = 0;
+    }
+}
+```
 
-- **WiFi Setup with AP Mode**: On first boot, creates a configuration hotspot
-- **MQTT Communication**: Real-time synchronization between paired devices
-- **LED Indication System**: Visual feedback for reading status and progress
-- **Pomodoro Timer**: Physical visualization of reading sessions
-- **Daily Reading Reset**: Automatic session tracking and daily statistics
+#### 4.3.4 Daily Reading Reset Mechanism
+When a new day begins, the system logs the previous day's total reading time, resets the counter, and publishes the updated state to the MQTT network to ensure paired devices are synchronized.
 
-## 📝 Future Development
 
-- PCB manufacturing for simpler assembly
-- iOS version of the companion app
-- Full integration between app and physical device
-- Reduced form factor with more compact components
-- Alternative visualizations for reading progress
 
-## 📚 References
+### 4.4 User Interaction and Data Visualisation
 
-1. Polivy, J., & Herman, C. P. (2002). If at First You Don't Succeed: False Hopes of Self-Change. American Psychologist, 57(9), 677–689. https://doi.org/10.1037/0003-066X.57.9.677
-2. Harris Poll (2019). Reading Habits Survey, conducted for Scribd.
-3. Wing, R. R., & Jeffery, R. W. (1999). Benefits of recruiting participants with friends and increasing social support for weight loss and maintenance. Journal of Consulting and Clinical Psychology, 67(1), 132–138. https://doi.org/10.1037/0022-006X.67.1.132
+#### 4.4.1 LED Indication System
 
-## 📄 License
+##### Book Lamp
+The main book lamp serves as both a reading light and a status indicator, using color and animation effects to visualise the device's state.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+When both books are open, the Book Lamp will display a smooth "breathing" effect that provides ambient lighting, which enhances the reading experience across both users, creating a reading atmosphere.
+
+```cpp
+void updateBreathingEffect() {
+    unsigned long currentTime = millis();
+    if (currentTime - lastBreathTime >= BREATH_INTERVAL) {
+        if (increasing) {
+            brightness += 5;
+            if (brightness >= 255) {
+                brightness = 255;
+                increasing = false;
+            }
+        } else {
+            brightness -= 5;
+            if (brightness <= 0) {
+                brightness = 0;
+                increasing = true;
+            }
+        }
+	lastBreathTime = currentTime;
+}
+```
+The book lamp color can be changed between pink (default) and yellow through the vibration sensor double-tap detection, which is design for interactive purposes to increase fun through readers:
+```cpp
+if (tapInterval > minTapInterval && tapInterval < doubleTapWindow) {
+    // Toggle light color and publish
+    isYellowColor = !isYellowColor;
+    publishLightColor(isYellowColor);
+    
+    // Apply the new color to LEDs
+    if (isYellowColor) {
+        setLEDColor(255, 255, 0);  // Yellow
+    } else {
+        setLEDColor(255, 102, 178);  // Pink
+    }
+}
+
+```
+This color change is synchronized between paired devices, creating a shared visual experience between remote users.
+
+
+
+
+#### 4.4.2 Progress Indicator LEDs
+
+The system implements separate LED strips for each user, which can be identified by color, to visualise reading time for both the user's device and the paired device. The number of LED display logic is shown in code below:
+```cpp
+// Map reading time to LED display (8 LEDs represent progress thresholds)
+    int ledsToLight = 0;
+    if (totalSeconds < 450) {
+        ledsToLight = 1;
+    } else if (totalSeconds < 900) {
+        ledsToLight = 2;
+    } else if (totalSeconds < 1350) {
+        ledsToLight = 3;
+    } else if (totalSeconds < 1800) {
+        ledsToLight = 4;
+    } else if (totalSeconds < 2250) {
+        ledsToLight = 5;
+    } else if (totalSeconds < 2700) {
+        ledsToLight = 6;
+    } else if (totalSeconds < 3150) {
+        ledsToLight = 7;
+    } else {
+        ledsToLight = 8;
+    }
+```
+
+Also, these reading progress LEDs can be switched on and off via a short button press to conserve power, which is shown below:
+```cpp
+    if (!progressLEDsEnabled) {
+        // Turn off both progress bar LEDs
+        timeStrip.clear();
+        timeStrip.show();
+        
+        deviceBTimeStrip.clear();
+        deviceBTimeStrip.show();
+    } else {
+        // Re-enable progress bar LEDs
+        updateTimeLEDs();
+        updateDeviceBTimeLEDs();
+    }
+```
+
+# 5. Application
+
+### 5.1 Overview
+The mobile application aims to provide users with a simple reading record and reading sharing experience. It ensures that users can record the current reading time and number of pages, and view past reading statistics through the app to achieve better development of reading habits.
+
+### 5.2 Main Functions
+#### 5.2.1 Recording reading time and pages
+
+<div style="text-align: center;">
+    <img src="./Images/5.2.1.png" alt="Recording reading time and pages interface" style="width: 100%;">
+    <p><em>Fig 24. Interface for recording reading time and pages</em></p>
+</div>
+
+- Click on the 'Goal' button and select the goal for today's reading time in the pop-up window.
+- Click on the 'Start' button to select the book you are going to read in the pop-up window (the data of the book in the pop-up window comes from the Library).
+- After starting to read, the 'Already' text will show the length of time already read, users can click the 'Stop' button to stop reading records, you can enter the progress of this reading in the pop-up window that appears after clicking.
+
+
+#### 5.2.2 Viewing Reading Statistics
+
+
+
+<div style="text-align: center;">
+    <img src="./Images/5.2.2.png" alt="Reading statistics overview" style="width: 100%;">
+    <p><em>Fig 25. Reading statistics overview showing weekly, monthly, and yearly views with time selection</em></p>
+</div>
+
+- Click on 'Recent Reading' on the homepage to go to the statistics page. 
+- Click on 'WEEK', 'MONTH', 'YEAR' to see reading statistics in different time units.
+- Click on the calendar icon to select a time in the pop-up window
+
+#### 5.2.3 Managing Personal Library
+
+<div style="text-align: center;">
+    <img src="./Images/5.2.3.png" alt="Personal library interface" style="width: 80%;">
+    <p><em>Fig 26. Personal library interface showing book collection with progress bars</em></p>
+</div>
+
+- The book cards on the Library page show each book's cover, title, author, and current reading progress bar.
+- Click on the 'Add a new book' card to add a book to the e-library and enter information about the new book in the pop-up window.
+- In the search box, you can enter the name of the book or author to search for existing book data.
+
+#### 5.2.4 Managing Personal Library
+Click the plus sign on the Group page to create a new group, and enter the group information in the pop-up window.
+<div style="text-align: center;">
+    <img src="./Images/group.png" alt="Group Photo" style="width: 80%;">
+    <p><em>Fig 27. Group Photo</em></p>
+</div>
+
+
+Click on each Group card to see more information about the group, including the number of members currently reading, the ranking of reading hours for the month, and the books read by group members.
+<div style="text-align: center;">
+    <img src="./Images/CEuniverse.png" alt="CEuniverse" style="width: 80%;">
+    <p><em>Fig 28. CEuniverse Team</em></p>
+</div>
+
+
+
+
+
+### 5.3 Interation
+#### 5.3.1 Sketch
+
+<div style="text-align: center;">
+    <img src="./Images/app_sketch.png" alt="App interface sketch" style="width: 100%;">
+    <p><em>Fig 29. Initial sketches of the app interface design</em></p>
+</div>
+
+#### 5.3.2 Prototype
+
+<div style="text-align: center;">
+    <img src="./Images/app_prototype.png" alt="App interface prototype" style="width: 100%;">
+    <p><em>Fig 30. High-fidelity prototype of the app interface</em></p>
+</div>
+
+#### 5.3.3 Current Development
+
+<div style="text-align: center;">
+    <img src="./Images/app_development.png" alt="Current app development" style="width: 100%;">
+    <p><em>Fig 31. Current development status of the app interface</em></p>
+</div>
+
+
+
+# **6. Limitations & Future development**
+### 6.1 More Possibilities in Design
+
+<div style="text-align: center;">
+    <img src="./Images/futuresketch.jpg" alt="Future Design Possibilities" style="width: 80%;">
+    <p><em>Fig 32. Future Design Possibilities</em></p>
+</div>
+Some of the advice about the product gained during the pitch made the team rethink about product design.
+
+- **Size**: The team tends to reduce the size of the product in the next iteration by upgrading the hardware to make it more write and easy to use. In fact, the current product still has a lot of free space inside.
+- **Visualisation**: For visualisation, the team preferred to make another prototype where the pages of the book could be opened from each side to represent the reading progress of both sides for a more intuitive comparison.
+
+### 6.2 How to Improve Hardware of LitMate?
+#### 6.2.1 Circuit Assembly and Challenges
+The circuit was designed to be straightforward, focusing on ease of connection. However, the symmetrical layout made wiring more complex, leading to issues in organization and debugging. The key challenges faced during assembly were:
+- **Complex Wiring Layout**: The symmetrical arrangement of components made routing difficult, increasing the risk of loose connections.
+- **Power Supply Limitations**: The initial single power source was insufficient for stable operation, especially when driving multiple LEDs and servos.
+- **Vibration Sensor Sensitivity**: The SW420 sensor was difficult to fine-tune, sometimes failing to detect subtle touches or triggering false readings.
+
+To address these issues, some measures were taken :
+1) Simplified the routing layout, reducing unnecessary wiring complexity.
+2) Implemented a separate power supply, ensuring adequate power distribution.
+3) Adjusted the sensitivity threshold of the SW420 sensor to improve its reliability.
+
+#### 6.2.2 PCB Design
+For the purpose of simplifying the hardware assembly of the product as well as reducing the size of the product. Designing a dedicated PCB is an ideal ending solution and the team has made the following attempts so far:
+
+<div style="text-align: center;">
+    <img src="./PCB Design/PCB.png" alt="PCB Design" style="width: 80%;">
+    <p><em>Fig 33. PCB Design</em></p>
+</div>
+
+### 6.3 Application
+
+The current APP is limited to Android mobile phones and has not yet been linked to a physical book light, which could be developed in both directions in future developments and iterations: 
+1) Develop different versions of the app for Android and IOS phones; 
+2) Implement a digital twin between mobile application and physical book light, allowing users to control the book light on/off and synchronise the reading time recorded by the book light in the application.
+
+### 6.4 Marketisation：Inability to finally recognise costs
+Below are the current individual equipment costing：
+
+| Component | Quantity | Subtotal (GBP) | Estimated Cost (GBP) | Notes |
+|-----------|----------|---------------|---------------------|-------|
+| ESP32 Development Board | 1 | £5.5-£8.8 | £7.2 | Main controller |
+| SW420 Vibration Sensor | 1 | £0.55-£1.1 | £0.8 | For touch detection |
+| Servo Motor | 2 | £3.3-£5.5 | £4.4 | Controls book opening/closing |
+| WS2812B LED Strip | 4 segments (8 LEDs each) | £8.8-£13.2 | £11.0 | For status display |
+| Push Button | 1 | £0.22-£0.55 | £0.4 | Stainless steel button |
+| 4xAA Battery Holder | 1 | £0.55-£1.1 | £0.8 | 6V power supply |
+| Acrylic Enclosure | - | £5.5-£11 | £8.3 | Including laser cutting cost |
+| Other Components (Wires, Resistors, etc.) | - | £2.2-£3.3 | £2.8 | Basic electronic components |
+| **Total** | - | **£26.6-£44.5** | **£35.7** | - |
+
+
+The ultimate goal of the product is to sell it on kickstater, so the cost and selling price need to be considered, but there are two uncertainties at the moment: the **paper-folding work** needs to seek cooperation from manufacturers for mass production, and the **subsequent development and maintenance costs of the APP**.
+
+# **7. Reference**
+1) Polivy, J., & Herman, C. P. (2002). If at First You Don't Succeed: False Hopes of Self-Change. American Psychologist, 57(9), 677–689. https://doi.org/10.1037/0003-066X.57.9.677
+2) Harris Poll (2019). Reading Habits Survey, conducted for Scribd. Summary available via Mental Floss by Garin Pirnia: 81% of people don't read as much as they want
+3) Wing, R. R., & Jeffery, R. W. (1999). Benefits of recruiting participants with friends and increasing social support for weight loss and maintenance. Journal of Consulting and Clinical Psychology, 67(1), 132–138. https://doi.org/10.1037/0022-006X.67.1.132
